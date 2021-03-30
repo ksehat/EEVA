@@ -120,8 +120,8 @@ binance_client = Client(api_key= '43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwM
 
 """Data"""
 binance_symbols = ['LTCUSDT']
-start_date = '1 Jan 2021'
-end_date = '2021-03-28 21:00:00'
+start_date = '20 Mar 2021'
+end_date = '2021-03-31 21:00:00'
 data_steps = ['1h']
 leverage=1
 plot_width = 1500
@@ -130,7 +130,7 @@ update_data(binance_symbols,data_steps,start_date)
 
 for symbol_row, symbol in enumerate(binance_symbols):
     for data_step in data_steps:
-        df = DataHunter(symbol=symbol, start_date=start_date, end_date=end_date,
+        df1 = DataHunter(symbol=symbol, start_date=start_date, end_date=end_date,
                         step=data_step).prepare_data(macd_slow=26,macd_fast=12,macd_sign=9)
         df2 = DataHunter(symbol=symbol, start_date=start_date, end_date=end_date,
                          step='30m').prepare_data(macd_slow=26, macd_fast=12, macd_sign=9)
@@ -140,88 +140,38 @@ for symbol_row, symbol in enumerate(binance_symbols):
         pp2_macd = 0
         pp1_date = 0
         pp2_date = 0
-        for date_pointer in range(len(df)):
+        warning = 0
+        for date_pointer in range(len(df1)):
             # new_macd_phase = MACD_phase_change(df, date_pointer)
-            if df['MACD1_Hist'][date_pointer] >= 0:
-                if df['high'][date_pointer] > pp1:
-                    pp1 = df['high'][date_pointer]
-                    pp1_macd = df['MACD1_Hist'][date_pointer]
-                    pp1_date = date_pointer
+            if df1['MACD1_Hist'][date_pointer] >= 0:
+                if df1['high'][date_pointer] > pp2:
+                    pp2 = df1['high'][date_pointer]
+                    pp2_macd = df1['MACD1_Hist'][date_pointer]
+                    pp2_date = date_pointer
                     if pp1 and pp2:
-                        if pp1 > pp2 and pp1_macd <= pp2_macd:
+                        if pp2 > pp1 and pp2_macd <= pp1_macd:
                             warning=1
-                            # print(df['timestamp'][pp1_date],df['timestamp'][pp2_date])
-                            # print(pp1_macd,pp2_macd)
-                            # print('==============')
                         if warning==1:
-                            date_pointer2_str = df['timestamp'][date_pointer]
+                            date_pointer2_str = df1['timestamp'][date_pointer]
                             for date_pointer2 in range(df2[df2[\
                                     'timestamp']==date_pointer2_str].index.values[0]+1,len(df2)):
-                                if df2['high'][date_pointer2] < pp1:
+                                if df2['high'][date_pointer2] < pp2:
                                     if df2['MACD1_Hist'][date_pointer2] < 0:
                                         alarm=1
-                                        print(df['timestamp'][pp2_date], df['timestamp'][
-                                            pp1_date], df2['timestamp'][date_pointer2])
-                                        print(pp2_macd, pp1_macd, df2['high'][date_pointer2])
+                                        print(df1['timestamp'][pp1_date], df1['timestamp'][
+                                            pp2_date], df2['timestamp'][date_pointer2])
+                                        print(pp1_macd, pp2_macd, df2['high'][date_pointer2])
                                         print('==============')
+                                        warning = 0
+                                        break
                                     else: continue
                                 else:
-                                    warning = 0
+                                    # warning = 0
                                     break
-                            # alarm==1
-                            # alarm_point = df2['timestamp'][date_pointer2]
-                            # print(alarm_point)
-
-
-
-                        else: continue
-                else: continue
-            if df['MACD1_Hist'][date_pointer] < 0:
-                if not pp1 == 0:
-                    pp2 = pp1
-                    pp2_macd = pp1_macd
-                    pp2_date = pp1_date
-                    pp1 = 0
-                    pp1_macd = 0
-
-
-
-                # new_macd_phase = MACD_phase_change(df,date_pointer)
-                # if pp1 and pp2 > pp1 and pp1_macd >= pp2_macd:  # divergence
-                #     alarm = 1
-                #     print(df['timestamp'][pp1_date],df['timestamp'][pp2_date])
-                #     print(df['MACD1_Hist'][pp1_date],df['MACD1_Hist'][pp2_date])
-                #     print('===============================')
-                #
-                # elif pp2: pp1, pp1_macd, pp1_date = pp2, pp2_macd, pp2_date
-                # pp2, pp2_macd, pp2_date = df['high'][date_pointer], df['MACD1_Hist'][date_pointer], date_pointer
-                # if not new_macd_phase: pp2, pp2_macd, pp2_date = max_finder(df, date_pointer, pp2, pp2_macd, pp2_date)
-
-
-        # long1 = None
-        # long2 = None
-        # long1_macd=0
-        # long2_macd=0
-        # dp=0
-        # for date_pointer in range(1,len(df)):
-        #     if df['MACD1_Hist'][date_pointer] >= 0:
-        #         new_macd_phase = MACD_phase_detection(df,date_pointer)
-        #         if new_macd_phase and not long1:
-        #             long1, long1_macd, long1_date = next(max_finder(df,date_pointer,new_macd_phase,long1))
-        #         elif new_macd_phase and long1:
-        #             if long2:
-        #                 long1, long1_macd, long1_date = long2, long2_macd, long2_date
-        #                 long2, long2_macd, long2_date = next(max_finder(df,date_pointer,new_macd_phase,None))
-        #             else: long2, long2_macd, long2_date = next(max_finder(df,date_pointer,new_macd_phase,long2))
-        #         elif not new_macd_phase and long1:
-        #             if long2:
-        #                 long2, long2_macd, long2_date = next(max_finder(df,date_pointer,new_macd_phase,long2))
-        #             else: long1, long1_macd, long1_date = next(max_finder(df,date_pointer,new_macd_phase,long1))
-        #
-        #         if long1 and long2:
-        #             if long2 > long1 and long2_macd <= long1_macd: #divergence
-        #                 alarm=1
-        #                 print(long1_macd,long2_macd)
-        #                 print(df['timestamp'][long1_date],df['timestamp'][long2_date])
-        #                 long1, long1_macd, long1_date = long2, long2_macd, long2_date
-        #                 long2, long2_macd, long2_date = None, None, None
+            if df1['MACD1_Hist'][date_pointer] < 0:
+                if not pp2==0:
+                    pp1 = pp2
+                    pp1_macd = pp2_macd
+                    pp1_date = pp2_date
+                    pp2 = 0
+                    pp2_macd = 0
