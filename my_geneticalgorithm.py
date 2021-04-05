@@ -63,9 +63,7 @@ class MyGeneticAlgorithm():
                  for idx in range(chromosome_len)]
             )
         ]
-
         child = [parents[nucleotide_selection[i]][i] for i in range(chromosome_len)]
-
         return child
 
     def mutate(self, member):

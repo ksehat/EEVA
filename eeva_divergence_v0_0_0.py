@@ -150,11 +150,9 @@ for symbol_row, symbol in enumerate(binance_symbols):
                     pp2_date = date_pointer
                     if pp1 and pp2:
                         if pp2 > pp1 and pp2_macd <= pp1_macd:
-                            warning=1
-                        if warning==1:
                             date_pointer2_str = df1['timestamp'][date_pointer]
                             for date_pointer2 in range(df2[df2[\
-                                    'timestamp']==date_pointer2_str].index.values[0]+1,len(df2)):
+                                    'timestamp']==date_pointer2_str].index.values[0]+2,len(df2)):
                                 if df2['high'][date_pointer2] < pp2:
                                     if df2['MACD1_Hist'][date_pointer2] < 0:
                                         alarm=1

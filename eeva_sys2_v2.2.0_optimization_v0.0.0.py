@@ -100,10 +100,10 @@ binance_client = Client(api_key= '43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwM
                         api_secret= 'JjJRJ3bWQTEShF4Eu8ZigY9aEMGPnFNJMH3WoNlOQgxSgrHmLOflIavhMx0KSZFC')
 
 """Data"""
-binance_symbols = ['BTCUSDT']
+binance_symbols = ['ETHUSDT']
 start_date = '1 Dec 2020'
-end_date = '2021-03-23 00:00:00'
-data_steps = ['1h']
+end_date = '2021-03-31 00:00:00'
+data_steps = ['2h']
 leverage=1
 plot_width = 1500
 plot_height = 1000
