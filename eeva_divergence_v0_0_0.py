@@ -120,8 +120,8 @@ binance_client = Client(api_key= '43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwM
 
 """Data"""
 binance_symbols = ['LTCUSDT']
-start_date = '20 Mar 2021'
-end_date = '2021-03-31 21:00:00'
+start_date = '10 Mar 2021'
+end_date = '2021-04-31 21:00:00'
 data_steps = ['1h']
 leverage=1
 plot_width = 1500
@@ -134,17 +134,27 @@ for symbol_row, symbol in enumerate(binance_symbols):
                         step=data_step).prepare_data(macd_slow=26,macd_fast=12,macd_sign=9)
         df2 = DataHunter(symbol=symbol, start_date=start_date, end_date=end_date,
                          step='30m').prepare_data(macd_slow=26, macd_fast=12, macd_sign=9)
-        pp1 = 0
-        pp2 = 0
-        pp1_macd = 0
-        pp2_macd = 0
-        pp1_date = 0
-        pp2_date = 0
-        warning = 0
+        pp1 = None
+        pp2 = None
+        pp1_macd = None
+        pp2_macd = None
+        pp1_date = None
+        pp2_date = None
+        np1 = None
+        np2 = None
+        np1_macd = None
+        np2_macd = None
+        np1_date = None
+        np2_date = None
         for date_pointer in range(len(df1)):
-            # new_macd_phase = MACD_phase_change(df, date_pointer)
             if df1['MACD1_Hist'][date_pointer] >= 0:
-                if df1['high'][date_pointer] > pp2:
+                if MACD_phase_change(df1,date_pointer):
+                    np1 = np2
+                    np1_macd = np2_macd
+                    np1_date = np2_date
+                    np2 = None
+                    np2_macd = None
+                if not pp2 or df1['high'][date_pointer] > pp2 :
                     pp2 = df1['high'][date_pointer]
                     pp2_macd = df1['MACD1_Hist'][date_pointer]
                     pp2_date = date_pointer
@@ -155,21 +165,38 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                     'timestamp']==date_pointer2_str].index.values[0]+2,len(df2)):
                                 if df2['high'][date_pointer2] < pp2:
                                     if df2['MACD1_Hist'][date_pointer2] < 0:
-                                        alarm=1
+                                        short_alarm=1
                                         print(df1['timestamp'][pp1_date], df1['timestamp'][
                                             pp2_date], df2['timestamp'][date_pointer2])
                                         print(pp1_macd, pp2_macd, df2['high'][date_pointer2])
                                         print('==============')
-                                        warning = 0
                                         break
                                     else: continue
-                                else:
-                                    # warning = 0
-                                    break
+                                else: break
             if df1['MACD1_Hist'][date_pointer] < 0:
-                if not pp2==0:
+                if MACD_phase_change(df1,date_pointer):
                     pp1 = pp2
                     pp1_macd = pp2_macd
                     pp1_date = pp2_date
-                    pp2 = 0
-                    pp2_macd = 0
+                    pp2 = None
+                    pp2_macd = None
+                # if not np2: np2 = df1['low'][date_pointer]
+                if not np2 or df1['low'][date_pointer] < np2:
+                    np2 = df1['low'][date_pointer]
+                    np2_macd = df1['MACD1_Hist'][date_pointer]
+                    np2_date = date_pointer
+                    if np1 and np2:
+                        if np2 < np1 and np2_macd >= np1_macd:
+                            date_pointer2_str = df1['timestamp'][date_pointer]
+                            for date_pointer2 in range(df2[df2[\
+                                    'timestamp']==date_pointer2_str].index.values[0]+2,len(df2)):
+                                if df2['low'][date_pointer2] > np2:
+                                    if df2['MACD1_Hist'][date_pointer2] >= 0:
+                                        long_alarm=1
+                                        print(df1['timestamp'][np1_date], df1['timestamp'][
+                                            np2_date], df2['timestamp'][date_pointer2])
+                                        print(np1_macd, np2_macd, df2['high'][date_pointer2])
+                                        print('==============')
+                                        break
+                                    else: continue
+                                else: break
