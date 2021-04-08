@@ -36,9 +36,10 @@ class XABTrader():
                 self.xab[1][3] = self.dp
             if (flag == 0 and df['low'][self.dp] <= B) or (
                     flag == 1 and df['high'][self.dp] >= B) and self.xab[0][3]: # TODO: check it if you want to enter at the same candle as C or not
-                self.xab[4][0] = 1 #enter=1
-                self.xab[4][1] = self.dp
+                self.xab[3][0] = 1 #enter=1
+                self.xab[3][1] = self.dp
         if enter==1:
+
 
 
 

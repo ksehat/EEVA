@@ -127,33 +127,34 @@ for symbol_row, symbol in enumerate(binance_symbols):
                     XAB_valid_list[::-1]):  # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xabc_flag, warning, alarm]
                 if xabc not in XABC_del_list:
 
-                    if buy == 1 and xabc != xabc_buy:
-                        # region Eliminate XABC when in trade
-                        if flag == 1 and (df['low'][date_pointer] < stop_loss or df['close'][
-                            date_pointer] > B): XABC_del_list.append(xabc)
-                        if flag == 0 and (df['high'][date_pointer] > stop_loss or df['close'][
-                            date_pointer] < B): XABC_del_list.append(xabc)
-                        # endregion
-                    if buy == 1 and xabc == xabc_buy:
-                        # region StopLoss
-                        if flag == 1 and df['MACD_Hist'][date_pointer] < 0:
-                            last_positive_MACD_index = df['low'][:date_pointer + 1].loc[df['MACD_Hist'] > 0].index[-1]
-                            sudo_stop_loss = min(df['low'][last_positive_MACD_index + 1:date_pointer + 1])
-                            flag_sudo_stop_loss = 1
-                            xabc.append(flag_sudo_stop_loss)
-                        if flag == 1 and df['MACD_Hist'][date_pointer] > 0 and flag_sudo_stop_loss == 1:
-                            stop_loss = sudo_stop_loss
-                            xabc[3] = stop_loss
+                    if buy == 1:
+                        if xabc != xabc_buy:
+                            # region Eliminate XABC when in trade
+                            if flag == 1 and (df['low'][date_pointer] < stop_loss or df['close'][
+                                date_pointer] > B): XABC_del_list.append(xabc)
+                            if flag == 0 and (df['high'][date_pointer] > stop_loss or df['close'][
+                                date_pointer] < B): XABC_del_list.append(xabc)
+                            # endregion
+                        if xabc == xabc_buy:
+                            # region StopLoss
+                            if flag == 1 and df['MACD_Hist'][date_pointer] < 0:
+                                last_positive_MACD_index = df['low'][:date_pointer + 1].loc[df['MACD_Hist'] > 0].index[-1]
+                                sudo_stop_loss = min(df['low'][last_positive_MACD_index + 1:date_pointer + 1])
+                                flag_sudo_stop_loss = 1
+                                xabc.append(flag_sudo_stop_loss)
+                            if flag == 1 and df['MACD_Hist'][date_pointer] > 0 and flag_sudo_stop_loss == 1:
+                                stop_loss = sudo_stop_loss
+                                xabc[3] = stop_loss
 
-                        if flag == 0 and df['MACD_Hist'][date_pointer] > 0:
-                            last_negative_MACD_index = df['high'][:date_pointer + 1].loc[df['MACD_Hist'] < 0].index[-1]
-                            sudo_stop_loss = max(df['high'][last_negative_MACD_index + 1:date_pointer + 1])
-                            flag_sudo_stop_loss = 1
-                            xabc.append(flag_sudo_stop_loss)
-                        if flag == 0 and df['MACD_Hist'][date_pointer] < 0 and flag_sudo_stop_loss == 1:
-                            stop_loss = sudo_stop_loss
-                            xabc[3] = stop_loss
-                        # endregion
+                            if flag == 0 and df['MACD_Hist'][date_pointer] > 0:
+                                last_negative_MACD_index = df['high'][:date_pointer + 1].loc[df['MACD_Hist'] < 0].index[-1]
+                                sudo_stop_loss = max(df['high'][last_negative_MACD_index + 1:date_pointer + 1])
+                                flag_sudo_stop_loss = 1
+                                xabc.append(flag_sudo_stop_loss)
+                            if flag == 0 and df['MACD_Hist'][date_pointer] < 0 and flag_sudo_stop_loss == 1:
+                                stop_loss = sudo_stop_loss
+                                xabc[3] = stop_loss
+                            # endregion
                         # region Exit XABC
                         if flag == 1 and df['low'][date_pointer] < stop_loss:
                             buy = 0
@@ -209,9 +210,11 @@ for symbol_row, symbol in enumerate(binance_symbols):
                         # endregion
                     if buy == 0:
                         # region Enter XABC
-                        if flag == 1:
-                            if df['low'][date_pointer] < C: XABC_del_list.append(xabc)
-                            if df['close'][date_pointer] >= B:  # TODO: Ichimoku should be added
+                        if (flag == 1 and df['low'][date_pointer]<=A):
+                            C = df['low'][date_pointer]
+                            index_C = date_pointer
+                        if flag==1 and df['low'][date_pointer] < C: XABC_del_list.append(xabc)
+                        if flag==1 and df['close'][date_pointer] >= B:  # TODO: Ichimoku should be added
                                 buy = 1
                                 index_buy = date_pointer
                                 xabc.append(stop_loss)
@@ -224,18 +227,25 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                 money_before_each_trade_list.append(money)
 
                         if flag == 0:
-                            if df['high'][date_pointer] > C: XABC_del_list.append(xabc)
-                            if df['close'][date_pointer] <= B:  # TODO: Ichimoku should be added
-                                buy = 1
-                                index_buy = date_pointer
-                                xabc.append(stop_loss)
-                                xabc_buy = xabc
-                                print(df['timestamp'][index_X], 'X:', X)
-                                print(df['timestamp'][index_A], 'A:', A)
-                                print(df['timestamp'][index_B], 'B:', B)
-                                print(df['timestamp'][index_C], 'C:', C)
-                                print(df['timestamp'][date_pointer], 'buy+:', B)
-                                money_before_each_trade_list.append(money)
+                            if not C and df['high'][date_pointer] >= A:
+                                C = df['high'][date_pointer]
+                                index_C = date_pointer
+                            if C:
+                                if df['high'][date_pointer] > C:
+                                    C = df['high'][date_pointer]
+                                    index_C = date_pointer
+                                    XABC_del_list.append(xabc)
+                                if df['close'][date_pointer] <= B:  # TODO: Ichimoku should be added
+                                    buy = 1
+                                    index_buy = date_pointer
+                                    xabc.append(stop_loss)
+                                    xabc_buy = xabc
+                                    print(df['timestamp'][index_X], 'X:', X)
+                                    print(df['timestamp'][index_A], 'A:', A)
+                                    print(df['timestamp'][index_B], 'B:', B)
+                                    print(df['timestamp'][index_C], 'C:', C)
+                                    print(df['timestamp'][date_pointer], 'buy+:', B)
+                                    money_before_each_trade_list.append(money)
 
                         # endregion
 
