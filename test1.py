@@ -1,5 +1,6 @@
-l1 = [[1,2,34],[36,987,64],[20,2,5]]
-for x in l1:
-    if x[1]==2: x[1]='yes'
+import copy
 
-print(l1)
+l1 = [[1,2,34],[36,987,64],[20,2,5]]
+c = copy.deepcopy(l1[0][2])
+c=24
+print(l1,c)

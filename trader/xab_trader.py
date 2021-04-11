@@ -52,4 +52,4 @@ class XABTrader():
     def finance(self):
 
 
-    def
+    def stop_loss(self):
