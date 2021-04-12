@@ -14,6 +14,23 @@ import copy
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from data_prep.data_hunter import DataHunter
+import pyflowchart as pfc
+
+def MACD_IND(data,win_slow,win_fast,win_sign):
+    MACD_IND1 = MACD(data['close'],window_slow=win_slow,window_fast=win_fast,window_sign=win_sign)
+    data['MACD']         = MACD_IND1.macd()
+    data['MACD_signal']  = MACD_IND1.macd_signal()
+    data['MACD_Hist']    = MACD_IND1.macd_diff()
+    data['MACD_ZC']      = np.where((data['MACD_Hist']*(data['MACD_Hist'].shift(1,axis=0))) < 0,1,0)
+    return data
+
+def Ichi(data,win1,win2,win3):
+    Ichimoku_IND1 = IchimokuIndicator(high=data['high'], low=data['low'], window1=win1, window2=win2, window3=win3)
+    data['Ichimoku_a']               = Ichimoku_IND1.ichimoku_a()
+    data['Ichimoku_b']               = Ichimoku_IND1.ichimoku_b()
+    data['Ichimoku_base_line']       = Ichimoku_IND1.ichimoku_base_line()
+    data['Ichimoku_conversion_line'] = Ichimoku_IND1.ichimoku_conversion_line()
+    return data
 
 def plot_figure(df, index_X, index_A, index_B, index_C, index_buy, index_sell, X, A, B, C, width, height):
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=.05)
@@ -42,8 +59,55 @@ def plot_figure(df, index_X, index_A, index_B, index_C, index_buy, index_sell, X
     fig.show()
 
 def macd_phase_change(df,date_pointer):
-    if df['MACD1_Hist'][date_pointer]*df['MACD1_Hist'][date_pointer-1]<0: return True
+    if df['MACD_Hist'][date_pointer]*df['MACD_Hist'][date_pointer-1]<0: return True
     else: return False
+
+def print_trade(df,X,A,B,xab,enter_price,exit_price,index_X,index_A,index_B,index_buy,index_sell):
+    print(df['timestamp'][index_X], 'X:', X)
+    print(df['timestamp'][index_A], 'A:', A)
+    print(df['timestamp'][index_B], 'B:', B)
+    print(df['timestamp'][xab[1][3]], 'C:', xab[0][3])
+    print(df['timestamp'][index_buy], 'enter:', enter_price)
+    print(df['timestamp'][index_sell], 'enter:', exit_price)
+
+def minutes_of_new_data(symbol, kline_size, data, start_date, source):
+    if len(data) > 0:
+        old = parser.parse(data["timestamp"].iloc[-1])
+    elif source == "binance":
+        old = datetime.strptime(start_date, '%d %b %Y')
+    if source == "binance": new = pd.to_datetime(binance_client.get_klines(symbol=symbol, interval=kline_size)[-1][0],
+                                                 unit='ms')
+    return old, new
+
+def get_all_binance(symbol, kline_size, start_date='1 Jan 2021', save=False):
+    filename = f'{symbol}-{kline_size}-data-from-{start_date}.csv'
+    if os.path.isfile(filename):
+        data_df = pd.read_csv(filename)
+    else:
+        data_df = pd.DataFrame()
+    oldest_point, newest_point = minutes_of_new_data(symbol, kline_size, data_df, start_date, source="binance")
+    delta_min = (newest_point - oldest_point).total_seconds() / 60
+    available_data = math.ceil(delta_min / binsizes[kline_size])
+    if oldest_point == datetime.strptime(start_date, '%d %b %Y'):
+        print(f'Downloading all available {kline_size} data for {symbol} from {start_date}. Be patient..!')
+    else:
+        print('Downloading %d minutes of new data available for %s, i.e. %d instances of %s data.' % (
+        delta_min, symbol, available_data, kline_size))
+    klines = binance_client.get_historical_klines(symbol, kline_size, oldest_point.strftime("%d %b %Y %H:%M:%S"),
+                                                  newest_point.strftime("%d %b %Y %H:%M:%S"))
+    data = pd.DataFrame(klines,
+                        columns=['timestamp', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_av',
+                                 'trades', 'tb_base_av', 'tb_quote_av', 'ignore'])
+    data['timestamp'] = pd.to_datetime(data['timestamp'], unit='ms')
+    if len(data_df) > 0:
+        temp_df = pd.DataFrame(data)
+        data_df = data_df.append(temp_df)
+    else:
+        data_df = data
+    data_df.set_index('timestamp', inplace=True)
+    if save: data_df.to_csv(filename)
+    print('All caught up..!')
+    return data_df
 
 binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240, "6h": 360, "12h": 720,
             "1d": 1440}
@@ -53,9 +117,9 @@ binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMr
 
 """Data"""
 binance_symbols = ['LTCUSDT']
-start_date = '1 Jan 2017'
-end_date = '2021-03-23 00:00:00'
-data_steps = ['30m']
+start_date = '1 Apr 2021'
+end_date = '2030-03-23 00:00:00'
+data_steps = ['1h']
 leverage = 1
 plot_width = 1500
 plot_height = 1000
@@ -63,12 +127,27 @@ plot_height = 1000
 for symbol_row, symbol in enumerate(binance_symbols):
     Profit_Loss_Table_by_Year_Month_for_symbol = pd.DataFrame()
     for data_step in data_steps:
-        df = DataHunter(symbol=symbol,start_date=start_date, end_date=end_date, step=data_step).prepare_data()
-        ZC_Index = pd.DataFrame( {'zcindex':df[df['MACD_ZC'] == 1].index.values,
-                                  'timestamp':df.loc[df['MACD_ZC']==1,'timestamp'],
-                                  'MACD_Hist':df.loc[df['MACD_ZC']==1,'MACD_Hist']} ,
-                                 columns=['zcindex','timestamp','MACD_Hist']).reset_index(drop=True)
+        filename = f'{symbol}-{data_step}-data-from-{start_date}.csv'
+        if os.path.isfile(filename):
+            data_org = pd.read_csv(filename, index_col=0)
+        else:
+            data_org = get_all_binance(symbol, data_step, start_date, save=True)
+
+        data_org.index = data_org.index.map(lambda x: x if type(x) == str else str(x))
+        data_org = data_org[~data_org.index.duplicated(keep='last')]
+        data = data_org[:end_date].filter(['open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_av',
+                                           'trades', 'tb_base_av', 'tb_quote_av'])
+        data1 = data.astype(float).copy(deep=True)
+        data2 = Ichi(data1, 9, 26, 52)
+        data3 = MACD_IND(data2, 26,12,9)
+        df = data3.copy(deep=True)
+        df.reset_index(inplace=True)
+        ZC_Index = pd.DataFrame({'zcindex': df[df['MACD_ZC'] == 1].index.values,
+                                 'timestamp': df.loc[df['MACD_ZC'] == 1, 'timestamp'],
+                                 'MACD_Hist': df.loc[df['MACD_ZC'] == 1, 'MACD_Hist']},
+                                columns=['zcindex', 'timestamp', 'MACD_Hist']).reset_index(drop=True)
         # region XAB Hunter
+        # TODO: we have to change the strategy of XAB
         XAB_list = []
         for row_zcindex, zcindex in ZC_Index.iterrows():
             if row_zcindex + 3 <= len(ZC_Index) - 1:
@@ -85,7 +164,7 @@ for symbol_row, symbol in enumerate(binance_symbols):
                     if A < X and B < X and B > A:
                         xab_flag = 1
                         Index_4 = ZC_Index.iloc[row_zcindex + 3, 0]
-                        XAB_list.append([[X, A, B, None], [index_X, index_A, index_B, None, Index_4], xabc_flag])
+                        XAB_list.append([[X, A, B, None], [index_X, index_A, index_B, None, Index_4], xab_flag, None, None])
                     # endregion
 
                 if df['MACD_Hist'][zcindex[0]] < 0:
@@ -99,11 +178,11 @@ for symbol_row, symbol in enumerate(binance_symbols):
                     index_B = df.iloc[ZC_Index.iloc[row_zcindex + 2, 0]: ZC_Index.iloc[row_zcindex + 3, 0]][
                         'low'].idxmin()
                     if A > X and B > X and B < A:
-                        xabc_flag = 0
+                        xab_flag = 0
                         Index_4 = ZC_Index.iloc[row_zcindex + 3, 0]
-                        XABC_list.append([[X, A, B, None], [index_X, index_A, index_B, Index_4, None], xabc_flag])
+                        XAB_list.append([[X, A, B, None], [index_X, index_A, index_B, None, Index_4], xab_flag, None, None])
                     # endregion
-        # endregion
+        # endregion #
 
         # region initializing params
         money = 1
@@ -125,10 +204,10 @@ for symbol_row, symbol in enumerate(binance_symbols):
             break
 
         XAB_del_list = []
-        for date_pointer in range(XAB_list[0][1][3], len(df)):
+        for date_pointer in range(XAB_list[0][1][4], len(df)):
             XAB_valid_list = [x for x in XAB_list if date_pointer >= x[1][4]]
             for idx_xab, xab in enumerate(
-                    XAB_valid_list[::-1]):  # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xabc_flag, warning, alarm]
+                    XAB_valid_list[::-1]):  # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xab_flag, sl, sudo_sl]
                 if xab not in XAB_del_list:
 
                     # region Initialize XABC and flag from xabc
@@ -148,44 +227,54 @@ for symbol_row, symbol in enumerate(binance_symbols):
                         # region Enter XABC
                         if flag == 1:#long
                             if xab[0][3]:
-                                if df['low'][date_pointer] <= xab[0][3]:
-                                    xab[0][3] = df['low'][date_pointer]
-                                    xab[1][3] = date_pointer
-                            elif df['low'][date_pointer] <= A:
+                                if df['MACD_Hist'][date_pointer]<0:
+                                    if df['low'][date_pointer] <= xab[0][3]:
+                                        xab[0][3] = df['low'][date_pointer]
+                                        xab[1][3] = date_pointer
+                                    if df['close'][date_pointer] >= B:
+                                        enter = 1
+                                        index_buy = date_pointer
+                                        xab_buy = xab
+                                        enter_price = B
+                                        xab[3] = xab[0][3]  # C is placed in sl and sudo_sl
+                                        xab[4] = xab[0][3]
+                                        money_before_each_trade_list.append(money)
+                            elif df['low'][date_pointer] <= A and df['MACD_Hist'][date_pointer]<0:
                                 xab[0][3] = df['low'][date_pointer]
                                 xab[1][3] = date_pointer # TODO: clarify if you want to enter a trade at the same candle if close>B as low<C
-                            if df['close'][date_pointer] >= B:
-                                enter = 1
-                                index_buy = date_pointer
-                                xab_buy = xab
-                                enter_price = B
-                                sl = xab[0][3]
-                                print(df['timestamp'][index_X], 'X:', X)
-                                print(df['timestamp'][index_A], 'A:', A)
-                                print(df['timestamp'][index_B], 'B:', B)
-                                print(df['timestamp'][xab[1][3]], 'C:', xab[0][3])
-                                print(df['timestamp'][date_pointer], 'enter:', B)
-                                money_before_each_trade_list.append(money)
-                        if flag == 0:#short
+                                if df['close'][date_pointer] >= B:
+                                    enter = 1
+                                    index_buy = date_pointer
+                                    xab_buy = xab
+                                    enter_price = B
+                                    xab[3] = xab[0][3] # C is placed in sl and sudo_sl
+                                    xab[4] = xab[0][3]
+                                    money_before_each_trade_list.append(money)
+                        if flag == 0:#
                             if xab[0][3]:
-                                if df['high'][date_pointer] >= xab[0][3]:
-                                    xab[0][3] = df['high'][date_pointer]
-                                    xab[1][3] = date_pointer
-                            elif df['high'][date_pointer] >= A:
+                                if df['MACD_Hist'][date_pointer]>0:
+                                    if df['high'][date_pointer] >= xab[0][3]:
+                                        xab[0][3] = df['high'][date_pointer]
+                                        xab[1][3] = date_pointer
+                                    if df['close'][date_pointer] <= B:
+                                        enter = 1
+                                        index_buy = date_pointer
+                                        xab_buy = xab
+                                        enter_price = B
+                                        xab[3] = xab[0][3]  # C is placed in sl and sudo_sl
+                                        xab[4] = xab[0][3]
+                                        money_before_each_trade_list.append(money)
+                            elif df['high'][date_pointer] >= A and df['MACD_Hist'][date_pointer]>0:
                                 xab[0][3] = df['high'][date_pointer]
                                 xab[1][3] = date_pointer # TODO: clarify if you want to enter a trade at the same candle if close>B as low<C
-                            if df['close'][date_pointer] <= B:
-                                enter = 1
-                                index_buy = date_pointer
-                                xab_buy = xab
-                                enter_price = B
-                                sl = xab[0][3]
-                                print(df['timestamp'][index_X], 'X:', X)
-                                print(df['timestamp'][index_A], 'A:', A)
-                                print(df['timestamp'][index_B], 'B:', B)
-                                print(df['timestamp'][xab[1][3]], 'C:', xab[0][3])
-                                print(df['timestamp'][date_pointer], 'enter:', B)
-                                money_before_each_trade_list.append(money)
+                                if df['close'][date_pointer] <= B:
+                                    enter = 1
+                                    index_buy = date_pointer
+                                    xab_buy = xab
+                                    enter_price = B
+                                    xab[3] = xab[0][3] # C is placed in sl and sudo_sl
+                                    xab[4] = xab[0][3]
+                                    money_before_each_trade_list.append(money)
                         # endregion
                     else: # If it is in trade
                         if xab != xab_buy:
@@ -195,7 +284,74 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                 if not flag and (df['high'][date_pointer] > xab[0][3] or df['low'][date_pointer] < B):
                                     XAB_del_list.append(xab)
                         if xab == xab_buy:
-
+                            if flag==1:
+                                if df['low'][date_pointer] < xab[3]:
+                                    enter = 0
+                                    index_sell = date_pointer
+                                    exit_price = xab[3]
+                                    print_trade(df, X, A, B, xab, enter_price, exit_price, index_X, index_A, index_B,
+                                                index_buy, index_sell)
+                                    if exit_price > B:
+                                        profit = leverage * ((exit_price - B) / B) - trade_fee
+                                        money = money + profit * money
+                                        profit_loss_list.append(profit)
+                                        num_of_pos_trades += 1
+                                        print('profit:', profit)
+                                        print('money:',money)
+                                    if exit_price <= B:
+                                        loss = leverage * ((exit_price - B) / B) - trade_fee
+                                        money = money + loss * money
+                                        profit_loss_list.append(loss)
+                                        num_of_neg_trades += 1
+                                        print('loss:', loss)
+                                        print('money:', money)
+                                    # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
+                                    #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
+                                    date_of_trade_list.append(df['timestamp'][date_pointer])
+                                    num_of_neg_trades_list.append(num_of_neg_trades)
+                                    num_of_pos_trades_list.append(num_of_pos_trades)
+                                    money_after_each_trade_list.append(money)
+                                    XAB_del_list.append(xab)
+                                else:
+                                    if df['MACD_Hist'][date_pointer]<0:
+                                        if macd_phase_change(df,date_pointer): xab[4] = df['low'][date_pointer]
+                                        else:
+                                            if df['low'][date_pointer] <= xab[4]: xab[4] = df['low'][date_pointer]
+                                    else: xab[3] = xab[4]
+                            if flag==0:
+                                if df['high'][date_pointer] > xab[3]:
+                                    enter = 0
+                                    index_sell = date_pointer
+                                    exit_price = xab[3]
+                                    print_trade(df, X, A, B, xab, enter_price, exit_price, index_X, index_A, index_B,
+                                                index_buy, index_sell)
+                                    if exit_price < B:
+                                        profit = leverage * ((B - exit_price) / B) - trade_fee
+                                        money = money + profit * money
+                                        profit_loss_list.append(profit)
+                                        num_of_pos_trades += 1
+                                        print('profit:', profit)
+                                        print('money:',money)
+                                    if exit_price >= B:
+                                        loss = leverage * ((B - exit_price) / B) - trade_fee
+                                        money = money + loss * money
+                                        profit_loss_list.append(loss)
+                                        num_of_neg_trades += 1
+                                        print('loss:', loss)
+                                        print('money:', money)
+                                    # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
+                                    #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
+                                    date_of_trade_list.append(df['timestamp'][date_pointer])
+                                    num_of_neg_trades_list.append(num_of_neg_trades)
+                                    num_of_pos_trades_list.append(num_of_pos_trades)
+                                    money_after_each_trade_list.append(money)
+                                    XAB_del_list.append(xab)
+                                else:
+                                    if df['MACD_Hist'][date_pointer] > 0:
+                                        if macd_phase_change(df,date_pointer): xab[4] = df['high'][date_pointer]
+                                        else:
+                                            if df['high'][date_pointer] >= xab[4]: xab[4] = df['high'][date_pointer]
+                                    else: xab[3] = xab[4]
 
         print(money)
 
@@ -266,3 +422,4 @@ for symbol_row, symbol in enumerate(binance_symbols):
         Profit_Loss_Table_by_Year_Month_for_symbol = \
             pd.concat([Profit_Loss_Table_by_Year_Month_for_symbol, Profit_Loss_Table_by_Year_Month], axis=1)
     Profit_Loss_Table_by_Year_Month_for_symbol.to_csv(f'{symbol}-{start_date}-{data_steps}.csv', index=True)
+
