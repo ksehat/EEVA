@@ -1,7 +1,3 @@
-from pyflowchart import Flowchart as fc
-
-with open('eeva_system2_v2.2.1.py') as f:
-    code = f.read()
-
-flow1 = fc.from_code(code)
-print(flow1.flowchart())
+def max_finder(x):
+    if x>=last_x: last_x=x
+    yield last_x
