@@ -203,9 +203,10 @@ for symbol_row, symbol in enumerate(binance_symbols):
             print('XAB list is empty')
             break
 
-        XAB_del_list = []
+        XAB_del_list = [] # This the list of XABs that are rejected
+        XAB_check_list = [] # This is the list of XABs that may be entered and are valid to enter but right now the system is in trade
         for date_pointer in range(XAB_list[0][1][4], len(df)):
-            XAB_valid_list = [x for x in XAB_list if date_pointer >= x[1][4]]
+            XAB_valid_list = [x for x in XAB_list if date_pointer >= x[1][4]] # This is the list of XABs before the date_pointer
             for idx_xab, xab in enumerate(
                     XAB_valid_list[::-1]):  # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xab_flag, sl, sudo_sl, dont_find_C]
                 if xab not in XAB_del_list:
@@ -228,11 +229,11 @@ for symbol_row, symbol in enumerate(binance_symbols):
                         # region Enter XABC
                         if flag == 1:#long
                             if xab[0][3]:
-                                if df['MACD_Hist'][date_pointer]<0 and xab[5]==0:
+                                if df['MACD_Hist'][date_pointer]<0 and xab[5]==0: # dont_find_C = xab[0][5]
                                     if df['low'][date_pointer] <= xab[0][3]:
                                         xab[0][3] = df['low'][date_pointer]
                                         xab[1][3] = date_pointer
-                                if df['MACD_Hist'][date_pointer]>0:
+                                if df['MACD_Hist'][date_pointer] > 0:
                                     xab[5] = 1
                                 if df['close'][date_pointer] >= B:
                                     enter = 1
@@ -293,10 +294,16 @@ for symbol_row, symbol in enumerate(binance_symbols):
                     else: # If it is in trade
                         if xab != xab_buy:
                             if xab[0][3]:
-                                if flag and (df['low'][date_pointer] < xab[0][3] or df['high'][date_pointer] > B):
-                                    XAB_del_list.append(xab)
-                                if not flag and (df['high'][date_pointer] > xab[0][3] or df['low'][date_pointer] < B):
-                                    XAB_del_list.append(xab)
+                                if flag:
+                                    if df['low'][date_pointer] < xab[0][3]:
+                                        XAB_del_list.append(xab)
+                                    if df['close'][date_pointer] > B:
+                                        XAB_check_list.append(xab)
+                                else:
+                                    if df['high'][date_pointer] > xab[0][3]:
+                                        XAB_del_list.append(xab)
+                                    if df['close'][date_pointer] < B:
+                                        XAB_check_list.append(xab)
                         if xab == xab_buy:
                             if flag==1:
                                 if df['low'][date_pointer] < xab[3]:
