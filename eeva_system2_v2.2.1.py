@@ -109,6 +109,76 @@ def get_all_binance(symbol, kline_size, start_date='1 Jan 2021', save=False):
     print('All caught up..!')
     return data_df
 
+def xab_initializer(xab):
+    X = xab[0][0]
+    A = xab[0][1]
+    B = xab[0][2]
+    # C = xab[0][3]
+    index_X = xab[1][0]
+    index_A = xab[1][1]
+    index_B = xab[1][2]
+    # index_C = xab[1][3]
+    index_4 = xab[1][4]
+    flag = xab[2]
+    dont_find_C = xab[5]
+    return X,A,B,index_X,index_A,index_B,index_4,flag
+
+def xab_enter_check(df,date_pointer,xab,enter):
+    if xab[2] and df['close'][date_pointer] >= xab[0][2]:
+        enter = 1
+    if not xab[2] and df['close'][date_pointer] <= xab[0][2]:
+        enter = 1
+    return enter
+
+def xab_completor(df,date_pointer,xab, XAB_del_list):
+    # region Initialize XABC and flag from xabc
+    X = xab[0][0]
+    A = xab[0][1]
+    B = xab[0][2]
+    # C = xab[0][3]
+    index_X = xab[1][0]
+    index_A = xab[1][1]
+    index_B = xab[1][2]
+    # index_C = xab[1][3]
+    index_4 = xab[1][4]
+    flag = xab[2]
+    dont_find_C = xab[5]
+    # endregion
+
+    if flag == 1:  # long
+        if xab[0][3]:
+            if df['MACD_Hist'][date_pointer] < 0 and xab[5] == 0:  # dont_find_C = xab[0][5]
+                if df['low'][date_pointer] <= xab[0][3]:
+                    xab[0][3] = df['low'][date_pointer]
+                    xab[1][3] = date_pointer
+            if df['MACD_Hist'][date_pointer] > 0:
+                xab[5] = 1
+        if not xab[0][3] and not xab[5]:
+            if df['low'][date_pointer] <= A and df['MACD_Hist'][date_pointer] < 0 and xab[5] == 0:
+                xab[0][3] = df['low'][date_pointer]
+                xab[1][3] = date_pointer
+            if df['MACD_Hist'][date_pointer] > 0:
+                xab[5] = 1
+                XAB_del_list.append(xab)
+
+    if flag == 0:  # short
+        if xab[0][3]:
+            if df['MACD_Hist'][date_pointer] > 0 and xab[5] == 0:
+                if df['high'][date_pointer] >= xab[0][3]:
+                    xab[0][3] = df['high'][date_pointer]
+                    xab[1][3] = date_pointer
+            if df['MACD_Hist'][date_pointer] < 0:
+                xab[5] = 1
+        if not xab[0][3] and not xab[5]:
+            if df['high'][date_pointer] >= A and df['MACD_Hist'][date_pointer] > 0 and xab[5] == 0:
+                xab[0][3] = df['high'][date_pointer]
+                xab[1][3] = date_pointer
+            if df['MACD_Hist'][date_pointer] < 0:
+                xab[5] = 1
+                XAB_del_list.append(xab)
+
+    return xab, XAB_del_list
+
 binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240, "6h": 360, "12h": 720,
             "1d": 1440}
 batch_size = 750
@@ -210,100 +280,33 @@ for symbol_row, symbol in enumerate(binance_symbols):
             for idx_xab, xab in enumerate(
                     XAB_valid_list[::-1]):  # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xab_flag, sl, sudo_sl, dont_find_C]
                 if xab not in XAB_del_list:
-
-                    # region Initialize XABC and flag from xabc
-                    X = xab[0][0]
-                    A = xab[0][1]
-                    B = xab[0][2]
-                    # C = xab[0][3]
-                    index_X = xab[1][0]
-                    index_A = xab[1][1]
-                    index_B = xab[1][2]
-                    # index_C = xab[1][3]
-                    index_4 = xab[1][4]
-                    flag = xab[2]
-                    dont_find_C = xab[5]
-                    # endregion
-
+                    X, A, B, index_X, index_A, index_B, index_4, flag = xab_initializer(xab)
                     if enter == 0:
-                        # region Enter XABC
-                        if flag == 1:#long
-                            if xab[0][3]:
-                                if df['MACD_Hist'][date_pointer]<0 and xab[5]==0: # dont_find_C = xab[0][5]
-                                    if df['low'][date_pointer] <= xab[0][3]:
-                                        xab[0][3] = df['low'][date_pointer]
-                                        xab[1][3] = date_pointer
-                                if df['MACD_Hist'][date_pointer] > 0:
-                                    xab[5] = 1
-                                if df['close'][date_pointer] >= B:
-                                    enter = 1
-                                    index_buy = date_pointer
-                                    xab_buy = xab
-                                    enter_price = B
-                                    xab[3] = xab[0][3]  # C is placed in sl and sudo_sl
-                                    xab[4] = xab[0][3]
-                                    money_before_each_trade_list.append(money)
-                            if not xab[0][3] and not xab[5]:
-                                if df['low'][date_pointer] <= A and df['MACD_Hist'][date_pointer]<0 and xab[5]==0:
-                                    xab[0][3] = df['low'][date_pointer]
-                                    xab[1][3] = date_pointer # TODO: clarify if you want to enter a trade at the same candle if close>B as low<C
-                                    if df['close'][date_pointer] >= B:
-                                        enter = 1
-                                        index_buy = date_pointer
-                                        xab_buy = xab
-                                        enter_price = B
-                                        xab[3] = xab[0][3] # C is placed in sl and sudo_sl
-                                        xab[4] = xab[0][3]
-                                        money_before_each_trade_list.append(money)
-                                if df['MACD_Hist'][date_pointer]>0:
-                                    xab[5] = 1
-                                    XAB_del_list.append(xab)
-                        if flag == 0:#
-                            if xab[0][3]:
-                                if df['MACD_Hist'][date_pointer]>0 and xab[5]==0:
-                                    if df['high'][date_pointer] >= xab[0][3]:
-                                        xab[0][3] = df['high'][date_pointer]
-                                        xab[1][3] = date_pointer
-                                if df['MACD_Hist'][date_pointer] < 0:
-                                    xab[5] = 1
-                                if df['close'][date_pointer] <= B:
-                                    enter = 1
-                                    index_buy = date_pointer
-                                    xab_buy = xab
-                                    enter_price = B
-                                    xab[3] = xab[0][3]  # C is placed in sl and sudo_sl
-                                    xab[4] = xab[0][3]
-                                    money_before_each_trade_list.append(money)
-                            if not xab[0][3] and not xab[5]:
-                                if df['high'][date_pointer] >= A and df['MACD_Hist'][date_pointer]>0 and xab[5]==0:
-                                    xab[0][3] = df['high'][date_pointer]
-                                    xab[1][3] = date_pointer # TODO: clarify if you want to enter a trade at the same candle if close>B as low<C
-                                    if df['close'][date_pointer] <= B:
-                                        enter = 1
-                                        index_buy = date_pointer
-                                        xab_buy = xab
-                                        enter_price = B
-                                        xab[3] = xab[0][3] # C is placed in sl and sudo_sl
-                                        xab[4] = xab[0][3]
-                                        money_before_each_trade_list.append(money)
-                                if df['MACD_Hist'][date_pointer] < 0:
-                                    xab[5] = 1
-                                    XAB_del_list.append(xab)
-
-                        # endregion
+                        xab, XAB_del_list = xab_completor(df, date_pointer, xab, XAB_del_list)
+                        enter = xab_enter_check(df, date_pointer, xab, enter)
+                        if enter==1:
+                            index_buy = date_pointer
+                            xab_buy = xab
+                            enter_price = xab[0][2]
+                            xab[3] = xab[0][3]  # C is placed in sl
+                            xab[4] = xab[0][3]  # C is placed in sudo_sl
+                            money_before_each_trade_list.append(money)
                     else: # If it is in trade
                         if xab != xab_buy:
+                            xab, XAB_del_list = xab_completor(df, date_pointer, xab, XAB_del_list)
                             if xab[0][3]:
                                 if flag:
                                     if df['low'][date_pointer] < xab[0][3]:
                                         XAB_del_list.append(xab)
                                     if df['close'][date_pointer] > B:
-                                        XAB_check_list.append(xab)
+                                        if xab not in XAB_check_list:
+                                            XAB_check_list.append(xab)
                                 else:
                                     if df['high'][date_pointer] > xab[0][3]:
                                         XAB_del_list.append(xab)
                                     if df['close'][date_pointer] < B:
-                                        XAB_check_list.append(xab)
+                                        if xab not in XAB_check_list:
+                                            XAB_check_list.append(xab)
                         if xab == xab_buy:
                             if flag==1:
                                 if df['low'][date_pointer] < xab[3]:
@@ -333,7 +336,20 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                     num_of_pos_trades_list.append(num_of_pos_trades)
                                     money_after_each_trade_list.append(money)
                                     XAB_del_list.append(xab)
+
+                                    if XAB_check_list:
+                                        print('==================')
+                                        print(XAB_check_list)
+                                        print('==================')
+                                        enter = 1
+                                        index_buy = date_pointer
+                                        xab_buy = XAB_check_list[-1]
+                                        enter_price = xab_buy[0][2]
+                                        del XAB_check_list[0]
+                                        sl = xab_buy[0][3]
+                                        sudo_sl = xab_buy[0][3]
                                 else:
+                                    if XAB_check_list: XAB_check_list = []
                                     if df['MACD_Hist'][date_pointer]<0:
                                         if macd_phase_change(df,date_pointer): xab[4] = df['low'][date_pointer]
                                         else:
@@ -367,7 +383,19 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                     num_of_pos_trades_list.append(num_of_pos_trades)
                                     money_after_each_trade_list.append(money)
                                     XAB_del_list.append(xab)
+                                    if XAB_check_list:
+                                        print('==================')
+                                        print(XAB_check_list)
+                                        print('==================')
+                                        enter = 1
+                                        index_buy = date_pointer
+                                        xab_buy = XAB_check_list[-1]
+                                        enter_price = xab_buy[0][2]
+                                        del XAB_check_list[0]
+                                        sl = xab_buy[0][3]
+                                        sudo_sl = xab_buy[0][3]
                                 else:
+                                    if XAB_check_list: XAB_check_list = []
                                     if df['MACD_Hist'][date_pointer] > 0:
                                         if macd_phase_change(df,date_pointer): xab[4] = df['high'][date_pointer]
                                         else:
@@ -443,4 +471,3 @@ for symbol_row, symbol in enumerate(binance_symbols):
         Profit_Loss_Table_by_Year_Month_for_symbol = \
             pd.concat([Profit_Loss_Table_by_Year_Month_for_symbol, Profit_Loss_Table_by_Year_Month], axis=1)
     Profit_Loss_Table_by_Year_Month_for_symbol.to_csv(f'{symbol}-{start_date}-{data_steps}.csv', index=True)
-
