@@ -157,6 +157,8 @@ def xab_completor(df,date_pointer,xab, XAB_del_list):
             if df['low'][date_pointer] <= A and df['MACD_Hist'][date_pointer] < 0 and xab[5] == 0:
                 xab[0][3] = df['low'][date_pointer]
                 xab[1][3] = date_pointer
+                xab[3] = xab[0][3]
+                xab[4] = xab[0][3]
             if df['MACD_Hist'][date_pointer] > 0:
                 xab[5] = 1
                 XAB_del_list.append(xab)
@@ -173,6 +175,8 @@ def xab_completor(df,date_pointer,xab, XAB_del_list):
             if df['high'][date_pointer] >= A and df['MACD_Hist'][date_pointer] > 0 and xab[5] == 0:
                 xab[0][3] = df['high'][date_pointer]
                 xab[1][3] = date_pointer
+                xab[3] = xab[0][3]
+                xab[4] = xab[0][3]
             if df['MACD_Hist'][date_pointer] < 0:
                 xab[5] = 1
                 XAB_del_list.append(xab)
@@ -187,8 +191,8 @@ binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMr
 
 """Data"""
 binance_symbols = ['LTCUSDT']
-start_date = '1 Jan 2021'
-end_date = '2021-03-09 00:00:00'
+start_date = '5 Mar 2021'
+end_date = '2021-03-19 00:00:00'
 data_steps = ['1h']
 leverage = 1
 plot_width = 1500
@@ -349,12 +353,14 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                         sl = xab_buy[0][3]
                                         sudo_sl = xab_buy[0][3]
                                 else:
-                                    if XAB_check_list: XAB_check_list = []
+                                    if XAB_check_list:
+                                        XAB_del_list.extend(XAB_check_list)
+                                        XAB_check_list = []
                                     if df['MACD_Hist'][date_pointer]<0:
                                         if macd_phase_change(df,date_pointer): xab[4] = df['low'][date_pointer]
                                         else:
                                             if df['low'][date_pointer] <= xab[4]: xab[4] = df['low'][date_pointer]
-                                    else: xab[3] = xab[4]
+                                    if df['MACD_Hist'][date_pointer]>0: xab[3] = xab[4]
                             if flag==0:
                                 if df['high'][date_pointer] > xab[3]:
                                     enter = 0
@@ -395,13 +401,14 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                         sl = xab_buy[0][3]
                                         sudo_sl = xab_buy[0][3]
                                 else:
-                                    if XAB_check_list: XAB_check_list = []
+                                    if XAB_check_list:
+                                        XAB_del_list.extend(XAB_check_list)
+                                        XAB_check_list = []
                                     if df['MACD_Hist'][date_pointer] > 0:
                                         if macd_phase_change(df,date_pointer): xab[4] = df['high'][date_pointer]
                                         else:
                                             if df['high'][date_pointer] >= xab[4]: xab[4] = df['high'][date_pointer]
-                                    else: xab[3] = xab[4]
-
+                                    if df['MACD_Hist'][date_pointer] < 0: xab[3] = xab[4]
         print(money)
 
         # region
