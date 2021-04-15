@@ -153,6 +153,8 @@ def xab_completor(df,date_pointer,xab, XAB_del_list):
                     xab[1][3] = date_pointer
             if df['MACD_Hist'][date_pointer] > 0:
                 xab[5] = 1
+                xab[3] = xab[0][3]
+                xab[4] = xab[0][3]
         if not xab[0][3] and not xab[5]:
             if df['low'][date_pointer] <= A and df['MACD_Hist'][date_pointer] < 0 and xab[5] == 0:
                 xab[0][3] = df['low'][date_pointer]
@@ -171,6 +173,8 @@ def xab_completor(df,date_pointer,xab, XAB_del_list):
                     xab[1][3] = date_pointer
             if df['MACD_Hist'][date_pointer] < 0:
                 xab[5] = 1
+                xab[3] = xab[0][3]
+                xab[4] = xab[0][3]
         if not xab[0][3] and not xab[5]:
             if df['high'][date_pointer] >= A and df['MACD_Hist'][date_pointer] > 0 and xab[5] == 0:
                 xab[0][3] = df['high'][date_pointer]
@@ -191,8 +195,8 @@ binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMr
 
 """Data"""
 binance_symbols = ['LTCUSDT']
-start_date = '5 Mar 2021'
-end_date = '2021-03-19 00:00:00'
+start_date = '1 Jan 2021'
+end_date = '2040-03-19 00:00:00'
 data_steps = ['1h']
 leverage = 1
 plot_width = 1500
