@@ -187,7 +187,7 @@ def xab_completor(df,date_pointer,xab, XAB_del_list):
 
     return xab, XAB_del_list
 
-def xab_reject_decision(df,dp,xab,XAB_del_list):
+def xab_reject_decision(df,dp,xab,XAB_del_list,XAB_check_list):
     if xab[2]==1:
         if df['low'][dp] < xab[0][3]:
             XAB_del_list.append(xab)
@@ -210,8 +210,8 @@ binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMr
 
 """Data"""
 binance_symbols = ['LTCUSDT']
-start_date = '1 Nov 2020'
-end_date = '2021-01-05 00:00:00'
+start_date = '1 Dec 2020'
+end_date = '2040-01-05 00:00:00'
 data_steps = ['1h']
 leverage = 1
 plot_width = 1500
@@ -232,7 +232,7 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                            'trades', 'tb_base_av', 'tb_quote_av'])
         data1 = data.astype(float).copy(deep=True)
         data2 = Ichi(data1, 9, 26, 52)
-        data3 = MACD_IND(data2, 26,12,9)
+        data3 = MACD_IND(data2, 40,48,12)
         df = data3.copy(deep=True)
         df.reset_index(inplace=True)
         ZC_Index = pd.DataFrame({'zcindex': df[df['MACD_ZC'] == 1].index.values,
@@ -306,7 +306,8 @@ for symbol_row, symbol in enumerate(binance_symbols):
                     X, A, B, index_X, index_A, index_B, index_4, flag = xab_initializer(xab)
                     if enter == 0:
                         xab, XAB_del_list = xab_completor(df, date_pointer, xab, XAB_del_list)
-                        enter = xab_enter_check(df, date_pointer, xab, enter)
+                        if xab[0][3]:
+                            enter = xab_enter_check(df, date_pointer, xab, enter)
                         if enter==1:
                             index_buy = date_pointer
                             xab_buy = xab
@@ -315,13 +316,13 @@ for symbol_row, symbol in enumerate(binance_symbols):
                             xab[4] = xab[0][3]  # C is placed in sudo_sl
                             money_before_each_trade_list.append(money)
                         elif xab[0][3] and xab[5]:
-                            XAB_del_list = xab_reject_decision(df,date_pointer,xab,XAB_del_list)
+                            XAB_del_list = xab_reject_decision(df,date_pointer,xab,XAB_del_list,XAB_check_list)
 
                     else: # If it is in trade
                         if xab != xab_buy:
                             xab, XAB_del_list = xab_completor(df, date_pointer, xab, XAB_del_list)
                             if xab[0][3]:
-                                XAB_del_list = xab_reject_decision(df,date_pointer,xab,XAB_del_list)
+                                XAB_del_list = xab_reject_decision(df,date_pointer,xab,XAB_del_list,XAB_check_list)
                         if xab == xab_buy:
                             if flag==1:
                                 if df['low'][date_pointer] < xab[3]:
@@ -361,8 +362,8 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                         xab_buy = XAB_check_list[-1]
                                         enter_price = xab_buy[0][2]
                                         del XAB_check_list[0]
-                                        sl = xab_buy[0][3]
-                                        sudo_sl = xab_buy[0][3]
+                                        # sl = xab_buy[0][3]
+                                        # sudo_sl = xab_buy[0][3]
                                 else:
                                     if XAB_check_list:
                                         XAB_del_list.extend(XAB_check_list)
@@ -408,8 +409,8 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                         xab_buy = XAB_check_list[-1]
                                         enter_price = xab_buy[0][2]
                                         del XAB_check_list[0]
-                                        sl = xab_buy[0][3]
-                                        sudo_sl = xab_buy[0][3]
+                                        # sl = xab_buy[0][3]
+                                        # sudo_sl = xab_buy[0][3]
                                 else:
                                     if XAB_check_list:
                                         XAB_del_list.extend(XAB_check_list)
