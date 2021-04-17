@@ -187,6 +187,21 @@ def xab_completor(df,date_pointer,xab, XAB_del_list):
 
     return xab, XAB_del_list
 
+def xab_reject_decision(df,dp,xab,XAB_del_list):
+    if xab[2]==1:
+        if df['low'][dp] < xab[0][3]:
+            XAB_del_list.append(xab)
+        if df['close'][dp] > xab[0][2]:
+            if xab not in XAB_check_list:
+                XAB_check_list.append(xab)
+    if xab[2]==0:
+        if df['high'][dp] > xab[0][3]:
+            XAB_del_list.append(xab)
+        if df['close'][dp] < xab[0][2]:
+            if xab not in XAB_check_list:
+                XAB_check_list.append(xab)
+    return XAB_del_list
+
 binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240, "6h": 360, "12h": 720,
             "1d": 1440}
 batch_size = 750
@@ -195,8 +210,8 @@ binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMr
 
 """Data"""
 binance_symbols = ['LTCUSDT']
-start_date = '1 Jan 2021'
-end_date = '2040-03-19 00:00:00'
+start_date = '1 Nov 2020'
+end_date = '2021-01-05 00:00:00'
 data_steps = ['1h']
 leverage = 1
 plot_width = 1500
@@ -299,22 +314,14 @@ for symbol_row, symbol in enumerate(binance_symbols):
                             xab[3] = xab[0][3]  # C is placed in sl
                             xab[4] = xab[0][3]  # C is placed in sudo_sl
                             money_before_each_trade_list.append(money)
+                        elif xab[0][3] and xab[5]:
+                            XAB_del_list = xab_reject_decision(df,date_pointer,xab,XAB_del_list)
+
                     else: # If it is in trade
                         if xab != xab_buy:
                             xab, XAB_del_list = xab_completor(df, date_pointer, xab, XAB_del_list)
                             if xab[0][3]:
-                                if flag:
-                                    if df['low'][date_pointer] < xab[0][3]:
-                                        XAB_del_list.append(xab)
-                                    if df['close'][date_pointer] > B:
-                                        if xab not in XAB_check_list:
-                                            XAB_check_list.append(xab)
-                                else:
-                                    if df['high'][date_pointer] > xab[0][3]:
-                                        XAB_del_list.append(xab)
-                                    if df['close'][date_pointer] < B:
-                                        if xab not in XAB_check_list:
-                                            XAB_check_list.append(xab)
+                                XAB_del_list = xab_reject_decision(df,date_pointer,xab,XAB_del_list)
                         if xab == xab_buy:
                             if flag==1:
                                 if df['low'][date_pointer] < xab[3]:
@@ -362,8 +369,7 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                         XAB_check_list = []
                                     if df['MACD_Hist'][date_pointer]<0:
                                         if macd_phase_change(df,date_pointer): xab[4] = df['low'][date_pointer]
-                                        else:
-                                            if df['low'][date_pointer] <= xab[4]: xab[4] = df['low'][date_pointer]
+                                        elif df['low'][date_pointer] <= xab[4]: xab[4] = df['low'][date_pointer]
                                     if df['MACD_Hist'][date_pointer]>0: xab[3] = xab[4]
                             if flag==0:
                                 if df['high'][date_pointer] > xab[3]:
@@ -410,8 +416,7 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                         XAB_check_list = []
                                     if df['MACD_Hist'][date_pointer] > 0:
                                         if macd_phase_change(df,date_pointer): xab[4] = df['high'][date_pointer]
-                                        else:
-                                            if df['high'][date_pointer] >= xab[4]: xab[4] = df['high'][date_pointer]
+                                        elif df['high'][date_pointer] >= xab[4]: xab[4] = df['high'][date_pointer]
                                     if df['MACD_Hist'][date_pointer] < 0: xab[3] = xab[4]
         print(money)
 

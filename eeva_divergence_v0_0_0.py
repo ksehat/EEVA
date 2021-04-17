@@ -120,8 +120,8 @@ binance_client = Client(api_key= '43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwM
 
 """Data"""
 binance_symbols = ['LTCUSDT']
-start_date = '10 Mar 2021'
-end_date = '2021-04-31 21:00:00'
+start_date = '25 Oct 2020'
+end_date = '2021-03-05 21:00:00'
 data_steps = ['1h']
 leverage=1
 plot_width = 1500
@@ -162,8 +162,8 @@ for symbol_row, symbol in enumerate(binance_symbols):
                         if pp2 > pp1 and pp2_macd <= pp1_macd:
                             date_pointer2_str = df1['timestamp'][date_pointer]
                             for date_pointer2 in range(df2[df2[\
-                                    'timestamp']==date_pointer2_str].index.values[0]+2,len(df2)):
-                                if df2['high'][date_pointer2] < pp2:
+                                    'timestamp']==date_pointer2_str].index.values[0]+1,len(df2)):
+                                if df2['high'][date_pointer2] <= pp2:
                                     if df2['MACD1_Hist'][date_pointer2] < 0:
                                         short_alarm=1
                                         print(df1['timestamp'][pp1_date], df1['timestamp'][
