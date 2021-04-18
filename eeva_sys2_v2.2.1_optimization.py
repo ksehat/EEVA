@@ -362,8 +362,7 @@ def f(x):
                                             xab_buy = XAB_check_list[-1]
                                             enter_price = xab_buy[0][2]
                                             del XAB_check_list[0]
-                                            sl = xab_buy[0][3]
-                                            sudo_sl = xab_buy[0][3]
+                                            money_before_each_trade_list.append(money)
                                     else:
                                         if XAB_check_list:
                                             XAB_del_list.extend(XAB_check_list)
@@ -401,16 +400,12 @@ def f(x):
                                         money_after_each_trade_list.append(money)
                                         XAB_del_list.append(xab)
                                         if XAB_check_list:
-                                            # print('==================')
-                                            # print(XAB_check_list)
-                                            # print('==================')
                                             enter = 1
                                             index_buy = date_pointer
                                             xab_buy = XAB_check_list[-1]
                                             enter_price = xab_buy[0][2]
                                             del XAB_check_list[0]
-                                            sl = xab_buy[0][3]
-                                            sudo_sl = xab_buy[0][3]
+                                            money_before_each_trade_list.append(money)
                                     else:
                                         if XAB_check_list:
                                             XAB_del_list.extend(XAB_check_list)

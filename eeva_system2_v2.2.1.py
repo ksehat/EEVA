@@ -211,7 +211,7 @@ binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMr
 """Data"""
 binance_symbols = ['LTCUSDT']
 start_date = '1 Dec 2020'
-end_date = '2040-01-05 00:00:00'
+end_date = '2022-12-01 00:00:00'
 data_steps = ['1h']
 leverage = 1
 plot_width = 1500
@@ -231,8 +231,8 @@ for symbol_row, symbol in enumerate(binance_symbols):
         data = data_org[:end_date].filter(['open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_av',
                                            'trades', 'tb_base_av', 'tb_quote_av'])
         data1 = data.astype(float).copy(deep=True)
-        data2 = Ichi(data1, 9, 26, 52)
-        data3 = MACD_IND(data2, 40,48,12)
+        data2 = Ichi(data1,9,26,52)
+        data3 = MACD_IND(data2,5,7,8)
         df = data3.copy(deep=True)
         df.reset_index(inplace=True)
         ZC_Index = pd.DataFrame({'zcindex': df[df['MACD_ZC'] == 1].index.values,
@@ -362,6 +362,7 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                         xab_buy = XAB_check_list[-1]
                                         enter_price = xab_buy[0][2]
                                         del XAB_check_list[0]
+                                        money_before_each_trade_list.append(money)
                                         # sl = xab_buy[0][3]
                                         # sudo_sl = xab_buy[0][3]
                                 else:
@@ -409,6 +410,7 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                         xab_buy = XAB_check_list[-1]
                                         enter_price = xab_buy[0][2]
                                         del XAB_check_list[0]
+                                        money_before_each_trade_list.append(money)
                                         # sl = xab_buy[0][3]
                                         # sudo_sl = xab_buy[0][3]
                                 else:
