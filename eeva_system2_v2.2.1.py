@@ -191,16 +191,16 @@ def xab_reject_decision(df,dp,xab,XAB_del_list,XAB_check_list):
     if xab[2]==1:
         if df['low'][dp] < xab[0][3]:
             XAB_del_list.append(xab)
-        if df['close'][dp] > xab[0][2]:
+        elif df['close'][dp] > xab[0][2]:
             if xab not in XAB_check_list:
                 XAB_check_list.append(xab)
     if xab[2]==0:
         if df['high'][dp] > xab[0][3]:
             XAB_del_list.append(xab)
-        if df['close'][dp] < xab[0][2]:
+        elif df['close'][dp] < xab[0][2]:
             if xab not in XAB_check_list:
                 XAB_check_list.append(xab)
-    return XAB_del_list
+    return XAB_del_list, XAB_check_list
 
 binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240, "6h": 360, "12h": 720,
             "1d": 1440}
@@ -210,8 +210,8 @@ binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMr
 
 """Data"""
 binance_symbols = ['LTCUSDT']
-start_date = '1 Dec 2020'
-end_date = '2022-12-01 00:00:00'
+start_date = '1 Jan 2018'
+end_date = '2020-11-01 00:00:00'
 data_steps = ['1h']
 leverage = 1
 plot_width = 1500
@@ -232,7 +232,7 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                            'trades', 'tb_base_av', 'tb_quote_av'])
         data1 = data.astype(float).copy(deep=True)
         data2 = Ichi(data1,9,26,52)
-        data3 = MACD_IND(data2,5,7,8)
+        data3 = MACD_IND(data2,5,7,10)
         df = data3.copy(deep=True)
         df.reset_index(inplace=True)
         ZC_Index = pd.DataFrame({'zcindex': df[df['MACD_ZC'] == 1].index.values,
@@ -316,13 +316,13 @@ for symbol_row, symbol in enumerate(binance_symbols):
                             xab[4] = xab[0][3]  # C is placed in sudo_sl
                             money_before_each_trade_list.append(money)
                         elif xab[0][3] and xab[5]:
-                            XAB_del_list = xab_reject_decision(df,date_pointer,xab,XAB_del_list,XAB_check_list)
+                            XAB_del_list, XAB_check_list = xab_reject_decision(df,date_pointer,xab,XAB_del_list,XAB_check_list)
 
                     else: # If it is in trade
                         if xab != xab_buy:
                             xab, XAB_del_list = xab_completor(df, date_pointer, xab, XAB_del_list)
                             if xab[0][3]:
-                                XAB_del_list = xab_reject_decision(df,date_pointer,xab,XAB_del_list,XAB_check_list)
+                                XAB_del_list, XAB_check_list = xab_reject_decision(df,date_pointer,xab,XAB_del_list,XAB_check_list)
                         if xab == xab_buy:
                             if flag==1:
                                 if df['low'][date_pointer] < xab[3]:
@@ -336,15 +336,15 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                         money = money + profit * money
                                         profit_loss_list.append(profit)
                                         num_of_pos_trades += 1
-                                        print('profit:', profit)
-                                        print('money:',money)
+                                        # print('profit:', profit)
+                                        # print('money:',money)
                                     if exit_price <= B:
                                         loss = leverage * ((exit_price - B) / B) - trade_fee
                                         money = money + loss * money
                                         profit_loss_list.append(loss)
                                         num_of_neg_trades += 1
-                                        print('loss:', loss)
-                                        print('money:', money)
+                                        # print('loss:', loss)
+                                        # print('money:', money)
                                     # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
                                     #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
                                     date_of_trade_list.append(df['timestamp'][date_pointer])
@@ -354,17 +354,15 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                     XAB_del_list.append(xab)
 
                                     if XAB_check_list:
-                                        print('==================')
-                                        print(XAB_check_list)
-                                        print('==================')
+                                        # print('==================')
+                                        # print(XAB_check_list)
+                                        # print('==================')
                                         enter = 1
                                         index_buy = date_pointer
                                         xab_buy = XAB_check_list[-1]
                                         enter_price = xab_buy[0][2]
                                         del XAB_check_list[0]
                                         money_before_each_trade_list.append(money)
-                                        # sl = xab_buy[0][3]
-                                        # sudo_sl = xab_buy[0][3]
                                 else:
                                     if XAB_check_list:
                                         XAB_del_list.extend(XAB_check_list)
@@ -385,15 +383,15 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                         money = money + profit * money
                                         profit_loss_list.append(profit)
                                         num_of_pos_trades += 1
-                                        print('profit:', profit)
-                                        print('money:',money)
+                                        # print('profit:', profit)
+                                        # print('money:',money)
                                     if exit_price >= B:
                                         loss = leverage * ((B - exit_price) / B) - trade_fee
                                         money = money + loss * money
                                         profit_loss_list.append(loss)
                                         num_of_neg_trades += 1
-                                        print('loss:', loss)
-                                        print('money:', money)
+                                        # print('loss:', loss)
+                                        # print('money:', money)
                                     # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
                                     #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
                                     date_of_trade_list.append(df['timestamp'][date_pointer])
@@ -402,17 +400,15 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                     money_after_each_trade_list.append(money)
                                     XAB_del_list.append(xab)
                                     if XAB_check_list:
-                                        print('==================')
-                                        print(XAB_check_list)
-                                        print('==================')
+                                        # print('==================')
+                                        # print(XAB_check_list)
+                                        # print('==================')
                                         enter = 1
                                         index_buy = date_pointer
                                         xab_buy = XAB_check_list[-1]
                                         enter_price = xab_buy[0][2]
                                         del XAB_check_list[0]
                                         money_before_each_trade_list.append(money)
-                                        # sl = xab_buy[0][3]
-                                        # sudo_sl = xab_buy[0][3]
                                 else:
                                     if XAB_check_list:
                                         XAB_del_list.extend(XAB_check_list)

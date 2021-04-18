@@ -414,7 +414,80 @@ def f(x):
                                             if macd_phase_change(df,date_pointer): xab[4] = df['high'][date_pointer]
                                             elif df['high'][date_pointer] >= xab[4]: xab[4] = df['high'][date_pointer]
                                         if df['MACD_Hist'][date_pointer] < 0: xab[3] = xab[4]
-    print(money)
+        print(money)
+        # region Monthly Table
+        # region
+        """ If there is a buy position but still the sell position doesn't
+        occur it would be a problem and this problem is solved in this region
+        """
+        lists = [date_of_trade_list, profit_loss_list, num_of_pos_trades_list,
+                 num_of_neg_trades_list, money_after_each_trade_list, money_before_each_trade_list]
+        unique_len = [len(i) for i in lists]
+        list_length = min(unique_len)
+        for index, l in enumerate(lists):
+            if len(l) > list_length:
+                del lists[index][-1]
+            list_length = len(l)
+        # endregion
+
+        Profit_Loss_Table = pd.DataFrame({
+            'date': date_of_trade_list,
+            'profit & loss': profit_loss_list,
+            'num_of_pos_trades': num_of_pos_trades_list,
+            'num_of_neg_trades': num_of_neg_trades_list,
+            'money_after_trade': money_after_each_trade_list,
+            'money_before_trade': money_before_each_trade_list
+        })
+
+        Profit_Loss_Table['date'] = pd.to_datetime(Profit_Loss_Table['date'])
+        Profit_Loss_Table['num_of_all_trades'] = Profit_Loss_Table['num_of_neg_trades'] + Profit_Loss_Table[
+            'num_of_pos_trades']
+
+        Profit_Loss_Table['year'] = Profit_Loss_Table['date'].apply(lambda t: t.year)
+        Profit_Loss_Table['month'] = Profit_Loss_Table['date'].apply(lambda t: t.month)
+        Profit_Loss_Table['day'] = Profit_Loss_Table['date'].apply(lambda t: t.day)
+
+        Money_each_month = Profit_Loss_Table.groupby(['year', 'month'])
+        month_profit_loss_list = []
+        year_month_list = []
+        month_pos_trades = []
+        month_neg_trades = []
+        month_all_trades = []
+        last_month_num_pos_trades = 0
+        last_month_num_neg_trades = 0
+        last_month_num_all_trades = 0
+        for key, value in zip(Money_each_month.groups.keys(), Money_each_month.groups.values()):
+            first_money = Profit_Loss_Table['money_before_trade'][value[0]]
+            last_money = Profit_Loss_Table['money_after_trade'][value[-1]]
+            month_profit = (last_money - first_money) * 100 / first_money
+            month_profit_loss_list.append(month_profit)
+
+            month_pos_trades.append(Profit_Loss_Table['num_of_pos_trades'][value[-1]] - last_month_num_pos_trades)
+            month_neg_trades.append(Profit_Loss_Table['num_of_neg_trades'][value[-1]] - last_month_num_neg_trades)
+            month_all_trades.append(Profit_Loss_Table['num_of_all_trades'][value[-1]] - last_month_num_all_trades)
+
+            year_month_list.append(key)
+            last_month_num_pos_trades = Profit_Loss_Table['num_of_pos_trades'][value[-1]]
+            last_month_num_neg_trades = Profit_Loss_Table['num_of_neg_trades'][value[-1]]
+            last_month_num_all_trades = Profit_Loss_Table['num_of_all_trades'][value[-1]]
+
+        Profit_Loss_Table_by_Year_Month = pd.DataFrame({
+            'year_month': year_month_list,
+            'profit & loss': month_profit_loss_list,
+            'positive trades': month_pos_trades,
+            'negative trades': month_neg_trades,
+            'all trades': month_all_trades,
+        })
+        Profit_Loss_Table_by_Year_Month = Profit_Loss_Table_by_Year_Month.add_suffix('_' + data_step)
+        print(Profit_Loss_Table_by_Year_Month)
+        Profit_Loss_Table_by_Year_Month_for_symbol = \
+            pd.concat([Profit_Loss_Table_by_Year_Month_for_symbol, Profit_Loss_Table_by_Year_Month], axis=1)
+        # endregion
+
+        # region Monthly Variance
+        for i in Profit_Loss_Table_by_Year_Month_for_symbol:
+        Profit_Loss_Table_by_Year_Month_for_symbol
+        # endregion
     print('==========')
     return money
 
@@ -429,70 +502,4 @@ GA = mga(config=ali, function=f, run_iter=20, population_size=100, n_crossover=3
 best_params = GA.run()
 print(best_params)
 
-        #     # region
-        #     """ If there is a buy position but still the sell position doesn't
-        #     occur it would be a problem and this problem is solved in this region
-        #     """
-        #     lists = [date_of_trade_list, profit_loss_list, num_of_pos_trades_list,
-        #              num_of_neg_trades_list, money_after_each_trade_list, money_before_each_trade_list]
-        #     unique_len = [len(i) for i in lists]
-        #     list_length = min(unique_len)
-        #     for index, l in enumerate(lists):
-        #         if len(l) > list_length:
-        #             del lists[index][-1]
-        #         list_length = len(l)
-        #     # endregion
-        #
-        #     Profit_Loss_Table = pd.DataFrame({
-        #         'date': date_of_trade_list,
-        #         'profit & loss': profit_loss_list,
-        #         'num_of_pos_trades': num_of_pos_trades_list,
-        #         'num_of_neg_trades': num_of_neg_trades_list,
-        #         'money_after_trade': money_after_each_trade_list,
-        #         'money_before_trade': money_before_each_trade_list
-        #     })
-        #
-        #     Profit_Loss_Table['date'] = pd.to_datetime(Profit_Loss_Table['date'])
-        #     Profit_Loss_Table['num_of_all_trades'] = Profit_Loss_Table['num_of_neg_trades'] + Profit_Loss_Table[
-        #         'num_of_pos_trades']
-        #
-        #     Profit_Loss_Table['year'] = Profit_Loss_Table['date'].apply(lambda t: t.year)
-        #     Profit_Loss_Table['month'] = Profit_Loss_Table['date'].apply(lambda t: t.month)
-        #     Profit_Loss_Table['day'] = Profit_Loss_Table['date'].apply(lambda t: t.day)
-        #
-        #     Money_each_month = Profit_Loss_Table.groupby(['year', 'month'])
-        #     month_profit_loss_list = []
-        #     year_month_list = []
-        #     month_pos_trades = []
-        #     month_neg_trades = []
-        #     month_all_trades = []
-        #     last_month_num_pos_trades = 0
-        #     last_month_num_neg_trades = 0
-        #     last_month_num_all_trades = 0
-        #     for key, value in zip(Money_each_month.groups.keys(), Money_each_month.groups.values()):
-        #         first_money = Profit_Loss_Table['money_before_trade'][value[0]]
-        #         last_money = Profit_Loss_Table['money_after_trade'][value[-1]]
-        #         month_profit = (last_money - first_money) * 100 / first_money
-        #         month_profit_loss_list.append(month_profit)
-        #
-        #         month_pos_trades.append(Profit_Loss_Table['num_of_pos_trades'][value[-1]] - last_month_num_pos_trades)
-        #         month_neg_trades.append(Profit_Loss_Table['num_of_neg_trades'][value[-1]] - last_month_num_neg_trades)
-        #         month_all_trades.append(Profit_Loss_Table['num_of_all_trades'][value[-1]] - last_month_num_all_trades)
-        #
-        #         year_month_list.append(key)
-        #         last_month_num_pos_trades = Profit_Loss_Table['num_of_pos_trades'][value[-1]]
-        #         last_month_num_neg_trades = Profit_Loss_Table['num_of_neg_trades'][value[-1]]
-        #         last_month_num_all_trades = Profit_Loss_Table['num_of_all_trades'][value[-1]]
-        #
-        #     Profit_Loss_Table_by_Year_Month = pd.DataFrame({
-        #         'year_month': year_month_list,
-        #         'profit & loss': month_profit_loss_list,
-        #         'positive trades': month_pos_trades,
-        #         'negative trades': month_neg_trades,
-        #         'all trades': month_all_trades,
-        #     })
-        #     Profit_Loss_Table_by_Year_Month = Profit_Loss_Table_by_Year_Month.add_suffix('_' + data_step)
-        #     print(Profit_Loss_Table_by_Year_Month)
-        #     Profit_Loss_Table_by_Year_Month_for_symbol = \
-        #         pd.concat([Profit_Loss_Table_by_Year_Month_for_symbol, Profit_Loss_Table_by_Year_Month], axis=1)
-        # Profit_Loss_Table_by_Year_Month_for_symbol.to_csv(f'{symbol}-{start_date}-{data_steps}.csv', index=True)
+
