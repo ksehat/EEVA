@@ -191,16 +191,16 @@ def xab_reject_decision(df,dp,xab,XAB_del_list,XAB_check_list):
     if xab[2]==1:
         if df['low'][dp] < xab[0][3]:
             XAB_del_list.append(xab)
-        if df['close'][dp] > xab[0][2]:
+        elif df['close'][dp] > xab[0][2]:
             if xab not in XAB_check_list:
                 XAB_check_list.append(xab)
     if xab[2]==0:
         if df['high'][dp] > xab[0][3]:
             XAB_del_list.append(xab)
-        if df['close'][dp] < xab[0][2]:
+        elif df['close'][dp] < xab[0][2]:
             if xab not in XAB_check_list:
                 XAB_check_list.append(xab)
-    return XAB_del_list
+    return XAB_del_list, XAB_check_list
 
 binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240, "6h": 360, "12h": 720,
             "1d": 1440}
@@ -223,22 +223,24 @@ def f(x):
         Profit_Loss_Table_by_Year_Month_for_symbol = pd.DataFrame()
         for data_step in data_steps:
             filename = f'{symbol}-{data_step}-data-from-{start_date}.csv'
-            if os.path.isfile(filename): data_org = pd.read_csv(filename,index_col=0)
-            else: data_org = get_all_binance(symbol, data_step, start_date, save=True)
+            if os.path.isfile(filename):
+                data_org = pd.read_csv(filename, index_col=0)
+            else:
+                data_org = get_all_binance(symbol, data_step, start_date, save=True)
 
             data_org.index = data_org.index.map(lambda x: x if type(x) == str else str(x))
             data_org = data_org[~data_org.index.duplicated(keep='last')]
             data = data_org[:end_date].filter(['open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_av',
                                                'trades', 'tb_base_av', 'tb_quote_av'])
             data1 = data.astype(float).copy(deep=True)
-            data2 = Ichi(data1,9,26,52)
+            data2 = Ichi(data1, 9, 26, 52)
             data3 = MACD_IND(data2,x[0],x[1],x[2])
             df = data3.copy(deep=True)
             df.reset_index(inplace=True)
-            ZC_Index = pd.DataFrame( {'zcindex':df[df['MACD_ZC'] == 1].index.values,
-                                      'timestamp':df.loc[df['MACD_ZC']==1,'timestamp'],
-                                      'MACD_Hist':df.loc[df['MACD_ZC']==1,'MACD_Hist']} ,
-                                     columns=['zcindex','timestamp','MACD_Hist']).reset_index(drop=True)
+            ZC_Index = pd.DataFrame({'zcindex': df[df['MACD_ZC'] == 1].index.values,
+                                     'timestamp': df.loc[df['MACD_ZC'] == 1, 'timestamp'],
+                                     'MACD_Hist': df.loc[df['MACD_ZC'] == 1, 'MACD_Hist']},
+                                    columns=['zcindex', 'timestamp', 'MACD_Hist']).reset_index(drop=True)
             # region XAB Hunter
             # TODO: we have to change the strategy of XAB
             XAB_list = []
@@ -257,7 +259,8 @@ def f(x):
                         if A < X and B < X and B > A:
                             xab_flag = 1
                             Index_4 = ZC_Index.iloc[row_zcindex + 3, 0]
-                            XAB_list.append([[X, A, B, None], [index_X, index_A, index_B, None, Index_4], xab_flag, None, None, 0])
+                            XAB_list.append(
+                                [[X, A, B, None], [index_X, index_A, index_B, None, Index_4], xab_flag, None, None, 0])
                         # endregion
 
                     if df['MACD_Hist'][zcindex[0]] < 0:
@@ -273,7 +276,8 @@ def f(x):
                         if A > X and B > X and B < A:
                             xab_flag = 0
                             Index_4 = ZC_Index.iloc[row_zcindex + 3, 0]
-                            XAB_list.append([[X, A, B, None], [index_X, index_A, index_B, None, Index_4], xab_flag, None, None, 0])
+                            XAB_list.append(
+                                [[X, A, B, None], [index_X, index_A, index_B, None, Index_4], xab_flag, None, None, 0])
                         # endregion
             # endregion #
 
@@ -296,19 +300,21 @@ def f(x):
                 print('XAB list is empty')
                 break
 
-            XAB_del_list = [] # This the list of XABs that are rejected
-            XAB_check_list = [] # This is the list of XABs that may be entered and are valid to enter but right now the system is in trade
+            XAB_del_list = []  # This the list of XABs that are rejected
+            XAB_check_list = []  # This is the list of XABs that may be entered and are valid to enter but right now the system is in trade
             for date_pointer in range(XAB_list[0][1][4], len(df)):
-                XAB_valid_list = [x for x in XAB_list if date_pointer >= x[1][4]] # This is the list of XABs before the date_pointer
+                XAB_valid_list = [x for x in XAB_list if
+                                  date_pointer >= x[1][4]]  # This is the list of XABs before the date_pointer
                 for idx_xab, xab in enumerate(
-                        XAB_valid_list[::-1]):  # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xab_flag, sl, sudo_sl, dont_find_C]
+                        XAB_valid_list[
+                        ::-1]):  # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xab_flag, sl, sudo_sl, dont_find_C]
                     if xab not in XAB_del_list:
                         X, A, B, index_X, index_A, index_B, index_4, flag = xab_initializer(xab)
                         if enter == 0:
                             xab, XAB_del_list = xab_completor(df, date_pointer, xab, XAB_del_list)
                             if xab[0][3]:
                                 enter = xab_enter_check(df, date_pointer, xab, enter)
-                            if enter==1:
+                            if enter == 1:
                                 index_buy = date_pointer
                                 xab_buy = xab
                                 enter_price = xab[0][2]
@@ -316,20 +322,23 @@ def f(x):
                                 xab[4] = xab[0][3]  # C is placed in sudo_sl
                                 money_before_each_trade_list.append(money)
                             elif xab[0][3] and xab[5]:
-                                XAB_del_list = xab_reject_decision(df,date_pointer,xab,XAB_del_list,XAB_check_list)
+                                XAB_del_list, XAB_check_list = xab_reject_decision(df, date_pointer, xab, XAB_del_list,
+                                                                                   XAB_check_list)
 
-                        else: # If it is in trade
+                        else:  # If it is in trade
                             if xab != xab_buy:
                                 xab, XAB_del_list = xab_completor(df, date_pointer, xab, XAB_del_list)
                                 if xab[0][3]:
-                                    XAB_del_list = xab_reject_decision(df,date_pointer,xab,XAB_del_list,XAB_check_list)
+                                    XAB_del_list, XAB_check_list = xab_reject_decision(df, date_pointer, xab,
+                                                                                       XAB_del_list, XAB_check_list)
                             if xab == xab_buy:
-                                if flag==1:
+                                if flag == 1:
                                     if df['low'][date_pointer] < xab[3]:
                                         enter = 0
                                         index_sell = date_pointer
                                         exit_price = xab[3]
-                                        # print_trade(df, X, A, B, xab, enter_price, exit_price, index_X, index_A, index_B,
+                                        # print_trade(df, X, A, B, xab, enter_price, exit_price, index_X, index_A,
+                                        #             index_B,
                                         #             index_buy, index_sell)
                                         if exit_price > B:
                                             profit = leverage * ((exit_price - B) / B) - trade_fee
@@ -367,16 +376,19 @@ def f(x):
                                         if XAB_check_list:
                                             XAB_del_list.extend(XAB_check_list)
                                             XAB_check_list = []
-                                        if df['MACD_Hist'][date_pointer]<0:
-                                            if macd_phase_change(df,date_pointer): xab[4] = df['low'][date_pointer]
-                                            elif df['low'][date_pointer] <= xab[4]: xab[4] = df['low'][date_pointer]
-                                        if df['MACD_Hist'][date_pointer]>0: xab[3] = xab[4]
-                                if flag==0:
+                                        if df['MACD_Hist'][date_pointer] < 0:
+                                            if macd_phase_change(df, date_pointer):
+                                                xab[4] = df['low'][date_pointer]
+                                            elif df['low'][date_pointer] <= xab[4]:
+                                                xab[4] = df['low'][date_pointer]
+                                        if df['MACD_Hist'][date_pointer] > 0: xab[3] = xab[4]
+                                if flag == 0:
                                     if df['high'][date_pointer] > xab[3]:
                                         enter = 0
                                         index_sell = date_pointer
                                         exit_price = xab[3]
-                                        # print_trade(df, X, A, B, xab, enter_price, exit_price, index_X, index_A, index_B,
+                                        # print_trade(df, X, A, B, xab, enter_price, exit_price, index_X, index_A,
+                                        #             index_B,
                                         #             index_buy, index_sell)
                                         if exit_price < B:
                                             profit = leverage * ((B - exit_price) / B) - trade_fee
@@ -400,6 +412,9 @@ def f(x):
                                         money_after_each_trade_list.append(money)
                                         XAB_del_list.append(xab)
                                         if XAB_check_list:
+                                            # print('==================')
+                                            # print(XAB_check_list)
+                                            # print('==================')
                                             enter = 1
                                             index_buy = date_pointer
                                             xab_buy = XAB_check_list[-1]
@@ -411,84 +426,76 @@ def f(x):
                                             XAB_del_list.extend(XAB_check_list)
                                             XAB_check_list = []
                                         if df['MACD_Hist'][date_pointer] > 0:
-                                            if macd_phase_change(df,date_pointer): xab[4] = df['high'][date_pointer]
-                                            elif df['high'][date_pointer] >= xab[4]: xab[4] = df['high'][date_pointer]
+                                            if macd_phase_change(df, date_pointer):
+                                                xab[4] = df['high'][date_pointer]
+                                            elif df['high'][date_pointer] >= xab[4]:
+                                                xab[4] = df['high'][date_pointer]
                                         if df['MACD_Hist'][date_pointer] < 0: xab[3] = xab[4]
-        print(money)
-        # region Monthly Table
-        # region
-        """ If there is a buy position but still the sell position doesn't
-        occur it would be a problem and this problem is solved in this region
-        """
-        lists = [date_of_trade_list, profit_loss_list, num_of_pos_trades_list,
-                 num_of_neg_trades_list, money_after_each_trade_list, money_before_each_trade_list]
-        unique_len = [len(i) for i in lists]
-        list_length = min(unique_len)
-        for index, l in enumerate(lists):
-            if len(l) > list_length:
-                del lists[index][-1]
-            list_length = len(l)
-        # endregion
+            # region
+            """ If there is a buy position but still the sell position doesn't
+            occur it would be a problem and this problem is solved in this region
+            """
+            lists = [date_of_trade_list, profit_loss_list, num_of_pos_trades_list,
+                     num_of_neg_trades_list, money_after_each_trade_list, money_before_each_trade_list]
+            unique_len = [len(i) for i in lists]
+            list_length = min(unique_len)
+            for index, l in enumerate(lists):
+                if len(l) > list_length:
+                    del lists[index][-1]
+                list_length = len(l)
+            # endregion
 
-        Profit_Loss_Table = pd.DataFrame({
-            'date': date_of_trade_list,
-            'profit & loss': profit_loss_list,
-            'num_of_pos_trades': num_of_pos_trades_list,
-            'num_of_neg_trades': num_of_neg_trades_list,
-            'money_after_trade': money_after_each_trade_list,
-            'money_before_trade': money_before_each_trade_list
-        })
+            Profit_Loss_Table = pd.DataFrame({
+                'date': date_of_trade_list,
+                'profit & loss': profit_loss_list,
+                'num_of_pos_trades': num_of_pos_trades_list,
+                'num_of_neg_trades': num_of_neg_trades_list,
+                'money_after_trade': money_after_each_trade_list,
+                'money_before_trade': money_before_each_trade_list
+            })
 
-        Profit_Loss_Table['date'] = pd.to_datetime(Profit_Loss_Table['date'])
-        Profit_Loss_Table['num_of_all_trades'] = Profit_Loss_Table['num_of_neg_trades'] + Profit_Loss_Table[
-            'num_of_pos_trades']
+            Profit_Loss_Table['date'] = pd.to_datetime(Profit_Loss_Table['date'])
+            Profit_Loss_Table['num_of_all_trades'] = Profit_Loss_Table['num_of_neg_trades'] + Profit_Loss_Table[
+                'num_of_pos_trades']
 
-        Profit_Loss_Table['year'] = Profit_Loss_Table['date'].apply(lambda t: t.year)
-        Profit_Loss_Table['month'] = Profit_Loss_Table['date'].apply(lambda t: t.month)
-        Profit_Loss_Table['day'] = Profit_Loss_Table['date'].apply(lambda t: t.day)
+            Profit_Loss_Table['year'] = Profit_Loss_Table['date'].apply(lambda t: t.year)
+            Profit_Loss_Table['month'] = Profit_Loss_Table['date'].apply(lambda t: t.month)
+            Profit_Loss_Table['day'] = Profit_Loss_Table['date'].apply(lambda t: t.day)
 
-        Money_each_month = Profit_Loss_Table.groupby(['year', 'month'])
-        month_profit_loss_list = []
-        year_month_list = []
-        month_pos_trades = []
-        month_neg_trades = []
-        month_all_trades = []
-        last_month_num_pos_trades = 0
-        last_month_num_neg_trades = 0
-        last_month_num_all_trades = 0
-        for key, value in zip(Money_each_month.groups.keys(), Money_each_month.groups.values()):
-            first_money = Profit_Loss_Table['money_before_trade'][value[0]]
-            last_money = Profit_Loss_Table['money_after_trade'][value[-1]]
-            month_profit = (last_money - first_money) * 100 / first_money
-            month_profit_loss_list.append(month_profit)
+            Money_each_month = Profit_Loss_Table.groupby(['year', 'month'])
+            month_profit_loss_list = []
+            year_month_list = []
+            month_pos_trades = []
+            month_neg_trades = []
+            month_all_trades = []
+            last_month_num_pos_trades = 0
+            last_month_num_neg_trades = 0
+            last_month_num_all_trades = 0
+            for key, value in zip(Money_each_month.groups.keys(), Money_each_month.groups.values()):
+                first_money = Profit_Loss_Table['money_before_trade'][value[0]]
+                last_money = Profit_Loss_Table['money_after_trade'][value[-1]]
+                month_profit = (last_money - first_money) * 100 / first_money
+                month_profit_loss_list.append(month_profit)
 
-            month_pos_trades.append(Profit_Loss_Table['num_of_pos_trades'][value[-1]] - last_month_num_pos_trades)
-            month_neg_trades.append(Profit_Loss_Table['num_of_neg_trades'][value[-1]] - last_month_num_neg_trades)
-            month_all_trades.append(Profit_Loss_Table['num_of_all_trades'][value[-1]] - last_month_num_all_trades)
+                month_pos_trades.append(Profit_Loss_Table['num_of_pos_trades'][value[-1]] - last_month_num_pos_trades)
+                month_neg_trades.append(Profit_Loss_Table['num_of_neg_trades'][value[-1]] - last_month_num_neg_trades)
+                month_all_trades.append(Profit_Loss_Table['num_of_all_trades'][value[-1]] - last_month_num_all_trades)
 
-            year_month_list.append(key)
-            last_month_num_pos_trades = Profit_Loss_Table['num_of_pos_trades'][value[-1]]
-            last_month_num_neg_trades = Profit_Loss_Table['num_of_neg_trades'][value[-1]]
-            last_month_num_all_trades = Profit_Loss_Table['num_of_all_trades'][value[-1]]
+                year_month_list.append(key)
+                last_month_num_pos_trades = Profit_Loss_Table['num_of_pos_trades'][value[-1]]
+                last_month_num_neg_trades = Profit_Loss_Table['num_of_neg_trades'][value[-1]]
+                last_month_num_all_trades = Profit_Loss_Table['num_of_all_trades'][value[-1]]
 
-        Profit_Loss_Table_by_Year_Month = pd.DataFrame({
-            'year_month': year_month_list,
-            'profit & loss': month_profit_loss_list,
-            'positive trades': month_pos_trades,
-            'negative trades': month_neg_trades,
-            'all trades': month_all_trades,
-        })
-        Profit_Loss_Table_by_Year_Month = Profit_Loss_Table_by_Year_Month.add_suffix('_' + data_step)
-        print(Profit_Loss_Table_by_Year_Month)
-        Profit_Loss_Table_by_Year_Month_for_symbol = \
-            pd.concat([Profit_Loss_Table_by_Year_Month_for_symbol, Profit_Loss_Table_by_Year_Month], axis=1)
-        # endregion
-
-        # region Monthly Variance
-        for i in Profit_Loss_Table_by_Year_Month_for_symbol:
-        Profit_Loss_Table_by_Year_Month_for_symbol
-        # endregion
-    print('==========')
+            Profit_Loss_Table_by_Year_Month = pd.DataFrame({
+                'year_month': year_month_list,
+                'profit & loss': month_profit_loss_list,
+                'positive trades': month_pos_trades,
+                'negative trades': month_neg_trades,
+                'all trades': month_all_trades,
+            })
+            Profit_Loss_Table_by_Year_Month = Profit_Loss_Table_by_Year_Month.add_suffix('_' + data_step)
+            Profit_Loss_Table_by_Year_Month_for_symbol = \
+                pd.concat([Profit_Loss_Table_by_Year_Month_for_symbol, Profit_Loss_Table_by_Year_Month], axis=1)
     return money
 
 ali = {
