@@ -140,7 +140,7 @@ class MyGeneticAlgorithm():
                     new_population_score_df.at[n_keep+n_crossover+n_mutate+iter_rand, 'score'] = copy.deepcopy(self.evaluate(random_member))
                     iter_rand+=1
             # endregion
-            new_population_score_df.sort_values(['score'], inplace=True, ignore_index=True, ascending=False)
+            new_population_score_df.sort_values(['score'], inplace=True, ignore_index=True, ascending=not self.maximize)
             population_score_df = copy.deepcopy(new_population_score_df)
             run_iter+=1
             pbar.update(run_iter)

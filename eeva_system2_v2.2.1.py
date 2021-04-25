@@ -209,10 +209,10 @@ binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMr
                         api_secret='JjJRJ3bWQTEShF4Eu8ZigY9aEMGPnFNJMH3WoNlOQgxSgrHmLOflIavhMx0KSZFC')
 
 """Data"""
-binance_symbols = ['BTCUSDT']
-start_date = '1 Nov 2020'
+binance_symbols = ['LTCUSDT']
+start_date = '1 Jan 2018'
 end_date = '2021-01-01 00:00:00'
-data_steps = ['1h']
+data_steps = ['2h']
 leverage = 1
 plot_width = 1500
 plot_height = 1000
@@ -232,7 +232,7 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                            'trades', 'tb_base_av', 'tb_quote_av'])
         data1 = data.astype(float).copy(deep=True)
         data2 = Ichi(data1,9,26,52)
-        data3 = MACD_IND(data2,26,12,9)
+        data3 = MACD_IND(data2,6,24,6)
         df = data3.copy(deep=True)
         df.reset_index(inplace=True)
         ZC_Index = pd.DataFrame({'zcindex': df[df['MACD_ZC'] == 1].index.values,
@@ -294,7 +294,7 @@ for symbol_row, symbol in enumerate(binance_symbols):
 
         if not XAB_list:
             print('XAB list is empty')
-            break
+            continue
 
         XAB_del_list = [] # This the list of XABs that are rejected
         XAB_check_list = [] # This is the list of XABs that may be entered and are valid to enter but right now the system is in trade
@@ -486,3 +486,6 @@ for symbol_row, symbol in enumerate(binance_symbols):
         Profit_Loss_Table_by_Year_Month_for_symbol = \
             pd.concat([Profit_Loss_Table_by_Year_Month_for_symbol, Profit_Loss_Table_by_Year_Month], axis=1)
     Profit_Loss_Table_by_Year_Month_for_symbol.to_csv(f'{symbol}-{start_date}-{data_steps}.csv', index=True)
+    favorite_monthly_profit = 10
+    monthly_profit_variance = np.mean(Profit_Loss_Table_by_Year_Month_for_symbol.iloc[:, 1] - favorite_monthly_profit)
+    print(monthly_profit_variance)
