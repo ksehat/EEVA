@@ -68,7 +68,7 @@ def print_trade(df,X,A,B,xab,enter_price,exit_price,index_X,index_A,index_B,inde
     print(df['timestamp'][index_B], 'B:', B)
     print(df['timestamp'][xab[1][3]], 'C:', xab[0][3])
     print(df['timestamp'][index_buy], 'enter:', enter_price)
-    print(df['timestamp'][index_sell], 'enter:', exit_price)
+    print(df['timestamp'][index_sell], 'exit:', exit_price)
 
 def minutes_of_new_data(symbol, kline_size, data, start_date, source):
     if len(data) > 0:
@@ -212,7 +212,7 @@ binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMr
 binance_symbols = ['LTCUSDT']
 start_date = '1 Jan 2018'
 end_date = '2021-01-01 00:00:00'
-data_steps = ['2h']
+data_steps = ['30m']
 leverage = 1
 plot_width = 1500
 plot_height = 1000
@@ -232,7 +232,7 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                            'trades', 'tb_base_av', 'tb_quote_av'])
         data1 = data.astype(float).copy(deep=True)
         data2 = Ichi(data1,9,26,52)
-        data3 = MACD_IND(data2,6,24,6)
+        data3 = MACD_IND(data2,5,30,4)
         df = data3.copy(deep=True)
         df.reset_index(inplace=True)
         ZC_Index = pd.DataFrame({'zcindex': df[df['MACD_ZC'] == 1].index.values,
@@ -336,15 +336,15 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                         money = money + profit * money
                                         profit_loss_list.append(profit)
                                         num_of_pos_trades += 1
-                                        # print('profit:', profit)
-                                        # print('money:',money)
+                                        print('profit:', profit)
+                                        print('money:',money)
                                     if exit_price <= B:
                                         loss = leverage * ((exit_price - B) / B) - trade_fee
                                         money = money + loss * money
                                         profit_loss_list.append(loss)
                                         num_of_neg_trades += 1
-                                        # print('loss:', loss)
-                                        # print('money:', money)
+                                        print('loss:', loss)
+                                        print('money:', money)
                                     # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
                                     #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
                                     date_of_trade_list.append(df['timestamp'][date_pointer])
@@ -383,15 +383,15 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                         money = money + profit * money
                                         profit_loss_list.append(profit)
                                         num_of_pos_trades += 1
-                                        # print('profit:', profit)
-                                        # print('money:',money)
+                                        print('profit:', profit)
+                                        print('money:',money)
                                     if exit_price >= B:
                                         loss = leverage * ((B - exit_price) / B) - trade_fee
                                         money = money + loss * money
                                         profit_loss_list.append(loss)
                                         num_of_neg_trades += 1
-                                        # print('loss:', loss)
-                                        # print('money:', money)
+                                        print('loss:', loss)
+                                        print('money:', money)
                                     # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
                                     #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
                                     date_of_trade_list.append(df['timestamp'][date_pointer])
