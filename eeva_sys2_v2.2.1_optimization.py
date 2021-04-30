@@ -202,6 +202,10 @@ def xab_reject_decision(df,dp,xab,XAB_del_list,XAB_check_list):
                 XAB_check_list.append(xab)
     return XAB_del_list, XAB_check_list
 
+def MACD_phase_change(df,date_pointer):
+    if df['MACD_Hist'][date_pointer]*df['MACD_Hist'][date_pointer-1]<0: return True
+    else: return False
+
 binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240, "6h": 360, "12h": 720,
             "1d": 1440}
 batch_size = 750
@@ -332,6 +336,9 @@ def f(x):
                                     XAB_del_list, XAB_check_list = xab_reject_decision(df, date_pointer, xab,
                                                                                        XAB_del_list, XAB_check_list)
                             if xab == xab_buy:
+                                if MACD_phase_change(df, date_pointer): xab[3] = xab[4]
+                                # This is because when the phase is changed, first you need to
+                                # replace the sl with sudo_sl
                                 if flag == 1:
                                     if df['low'][date_pointer] < xab[3]:
                                         enter = 0
