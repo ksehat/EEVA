@@ -202,16 +202,20 @@ def xab_reject_decision(df,dp,xab,XAB_del_list,XAB_check_list):
                 XAB_check_list.append(xab)
     return XAB_del_list, XAB_check_list
 
-binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240, "6h": 360, "12h": 720,
-            "1d": 1440}
+def MACD_phase_change(df,date_pointer):
+    if df['MACD_Hist'][date_pointer]*df['MACD_Hist'][date_pointer-1]<0: return True
+    else: return False
+
+binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120,  "4h": 240,
+            "6h": 360, "12h": 720, "1d": 1440}
 batch_size = 750
 binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMrCl7lZhhJSIM1ijIzS',
                         api_secret='JjJRJ3bWQTEShF4Eu8ZigY9aEMGPnFNJMH3WoNlOQgxSgrHmLOflIavhMx0KSZFC')
 
 """Data"""
 binance_symbols = ['LTCUSDT']
-start_date = '1 Jan 2018'
-end_date = '2021-01-01 00:00:00'
+start_date = '7 Feb 2019'
+end_date = '2019-02-15 00:00:00'
 data_steps = ['30m']
 leverage = 1
 plot_width = 1500
@@ -316,14 +320,19 @@ for symbol_row, symbol in enumerate(binance_symbols):
                             xab[4] = xab[0][3]  # C is placed in sudo_sl
                             money_before_each_trade_list.append(money)
                         elif xab[0][3] and xab[5]:
-                            XAB_del_list, XAB_check_list = xab_reject_decision(df,date_pointer,xab,XAB_del_list,XAB_check_list)
+                            XAB_del_list, XAB_check_list = xab_reject_decision(df,date_pointer,
+                                                                                xab,XAB_del_list,XAB_check_list)
 
                     else: # If it is in trade
                         if xab != xab_buy:
                             xab, XAB_del_list = xab_completor(df, date_pointer, xab, XAB_del_list)
                             if xab[0][3]:
-                                XAB_del_list, XAB_check_list = xab_reject_decision(df,date_pointer,xab,XAB_del_list,XAB_check_list)
+                                XAB_del_list, XAB_check_list = xab_reject_decision(df,
+                                                                                    date_pointer,xab,XAB_del_list,XAB_check_list)
                         if xab == xab_buy:
+                            if MACD_phase_change(df,date_pointer): xab[3] = xab[4]
+                            # This is because when the phase is changed, first you need to
+                            # replace the sl with sudo_sl
                             if flag==1:
                                 if df['low'][date_pointer] < xab[3]:
                                     enter = 0
