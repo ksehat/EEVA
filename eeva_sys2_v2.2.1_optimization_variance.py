@@ -332,6 +332,9 @@ def f(x):
                                         XAB_del_list, XAB_check_list = xab_reject_decision(df, date_pointer, xab,
                                                                                            XAB_del_list, XAB_check_list)
                                 if xab == xab_buy:
+                                    if macd_phase_change(df, date_pointer): xab[3] = xab[4]
+                                    # This is because when the phase is changed, first you need to
+                                    # replace the sl with sudo_sl
                                     if flag == 1:
                                         if df['low'][date_pointer] < xab[3]:
                                             enter = 0
@@ -370,7 +373,7 @@ def f(x):
                                                 index_buy = date_pointer
                                                 xab_buy = XAB_check_list[-1]
                                                 enter_price = xab_buy[0][2]
-                                                del XAB_check_list[0]
+                                                del XAB_check_list[-1]
                                                 money_before_each_trade_list.append(money)
                                         else:
                                             if XAB_check_list:
@@ -419,7 +422,7 @@ def f(x):
                                                 index_buy = date_pointer
                                                 xab_buy = XAB_check_list[-1]
                                                 enter_price = xab_buy[0][2]
-                                                del XAB_check_list[0]
+                                                del XAB_check_list[-1]
                                                 money_before_each_trade_list.append(money)
                                         else:
                                             if XAB_check_list:
@@ -498,24 +501,27 @@ def f(x):
                     pd.concat([Profit_Loss_Table_by_Year_Month_for_symbol, Profit_Loss_Table_by_Year_Month], axis=1)
 
                 favorite_monthly_profit = 10
-                monthly_profit_variance = sum((Profit_Loss_Table_by_Year_Month_for_symbol.iloc[:, 1] - favorite_monthly_profit))
-                inverse_monthly_profit_variance = 1/monthly_profit_variance
-                print(inverse_monthly_profit_variance)
+                monthly_profit_variance = sum((Profit_Loss_Table_by_Year_Month_for_symbol.iloc[
+                                                :, 1] - favorite_monthly_profit)**2)
+                number_positive_profit = len(Profit_Loss_Table_by_Year_Month_for_symbol.iloc[:,
+                                           1][Profit_Loss_Table_by_Year_Month_for_symbol.iloc[:, 1]>=0])
+                # inverse_monthly_profit_variance = 1/monthly_profit_variance
+                print(monthly_profit_variance/number_positive_profit)
                 print('=======')
-        return inverse_monthly_profit_variance
-    except UnboundLocalError as e:
-        print('UnboundLocalError is occured and empty list is replied.')
+        return monthly_profit_variance/number_positive_profit
+    except (UnboundLocalError,ZeroDivisionError) as e:
+        print('UnboundLocalError')
         return []
 
 
 ali = {
-    'fast_window': [5, 6, 7, 12, 13, 26, 30, 40, 52],
-    'slow_window': [4, 5, 6, 7, 12, 24, 30, 40, 48],
+    'fast_window': [4, 5, 6, 7, 12, 24, 30, 40, 48],
+    'slow_window': [5, 6, 7, 12, 13, 26, 30, 40, 52],
     'sign_window': [4, 6, 8, 9, 10, 12, 14, 16, 18, 20]
-
 }
 
-GA = mga(config=ali, function=f, run_iter=20, population_size=100, n_crossover=3, crossover_mode='random', maximize=True)
+GA = mga(config=ali, function=f, run_iter=20, population_size=100, n_crossover=3,
+         crossover_mode='random', maximize=False)
 best_params = GA.run()
 print(best_params)
 

@@ -214,9 +214,9 @@ binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMr
 
 """Data"""
 binance_symbols = ['LTCUSDT']
-start_date = '7 Feb 2019'
-end_date = '2020-03-15 00:00:00'
-data_steps = ['30m']
+start_date = '1 Jan 2018'
+end_date = '2021-04-15 00:00:00'
+data_steps = ['2h']
 leverage = 1
 plot_width = 1500
 plot_height = 1000
@@ -236,7 +236,7 @@ for symbol_row, symbol in enumerate(binance_symbols):
                                            'trades', 'tb_base_av', 'tb_quote_av'])
         data1 = data.astype(float).copy(deep=True)
         data2 = Ichi(data1,9,26,52)
-        data3 = MACD_IND(data2,5,30,4)
+        data3 = MACD_IND(data2,7,6,18)
         df = data3.copy(deep=True)
         df.reset_index(inplace=True)
         ZC_Index = pd.DataFrame({'zcindex': df[df['MACD_ZC'] == 1].index.values,

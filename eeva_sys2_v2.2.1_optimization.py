@@ -336,7 +336,7 @@ def f(x):
                                     XAB_del_list, XAB_check_list = xab_reject_decision(df, date_pointer, xab,
                                                                                        XAB_del_list, XAB_check_list)
                             if xab == xab_buy:
-                                if MACD_phase_change(df, date_pointer): xab[3] = xab[4]
+                                if macd_phase_change(df, date_pointer): xab[3] = xab[4]
                                 # This is because when the phase is changed, first you need to
                                 # replace the sl with sudo_sl
                                 if flag == 1:
@@ -377,7 +377,7 @@ def f(x):
                                             index_buy = date_pointer
                                             xab_buy = XAB_check_list[-1]
                                             enter_price = xab_buy[0][2]
-                                            del XAB_check_list[0]
+                                            del XAB_check_list[-1]
                                             money_before_each_trade_list.append(money)
                                     else:
                                         if XAB_check_list:
@@ -426,7 +426,7 @@ def f(x):
                                             index_buy = date_pointer
                                             xab_buy = XAB_check_list[-1]
                                             enter_price = xab_buy[0][2]
-                                            del XAB_check_list[0]
+                                            del XAB_check_list[-1]
                                             money_before_each_trade_list.append(money)
                                     else:
                                         if XAB_check_list:
