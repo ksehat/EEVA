@@ -517,7 +517,8 @@ def amir(*args):
                     [Profit_Loss_Table_by_Year_Month_for_symbol, Profit_Loss_Table_by_Year_Month],
                     axis=1)
         Profit_Loss_Table_by_Year_Month_for_symbol.to_csv(f'{symbol}-{start_date}-'
-                                                          f'{data_steps}-{args}.csv', index=True)
+                                                          f'{data_steps}-{args}-{money}.csv',
+                                                          index=True)
         # favorite_monthly_profit = 10
         # monthly_profit_variance = np.mean(Profit_Loss_Table_by_Year_Month_for_symbol.iloc[:, 1] - favorite_monthly_profit)
         # print(monthly_profit_variance)
