@@ -27,7 +27,7 @@ class MyGeneticAlgorithm():
 
     def evaluate(self, member):
         output = self.function(member)
-        if isinstance(output,list):
+        if not output:
             if self.maximize: return 1e-20
             else: return 1e20
         try:

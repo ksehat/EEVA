@@ -14,7 +14,7 @@ import copy
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from data_prep.data_hunter import DataHunter
-import pyflowchart as pfc
+# import pyflowchart as pfc
 
 def MACD_IND(data,win_slow,win_fast,win_sign):
     MACD_IND1 = MACD(data['close'],window_slow=win_slow,window_fast=win_fast,window_sign=win_sign)
