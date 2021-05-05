@@ -15,6 +15,8 @@ from plotly.subplots import make_subplots
 from data_prep.data_hunter import DataHunter
 import pyflowchart as pfc
 from my_geneticalgorithm import MyGeneticAlgorithm as mga
+from data_prep.data_hunter import DataHunter
+import os
 
 def MACD_IND(data,win_slow,win_fast,win_sign):
     MACD_IND1 = MACD(data['close'],window_slow=win_slow,window_fast=win_fast,window_sign=win_sign)
@@ -202,18 +204,11 @@ def xab_reject_decision(df,dp,xab,XAB_del_list,XAB_check_list):
                 XAB_check_list.append(xab)
     return XAB_del_list, XAB_check_list
 
-def MACD_phase_change(df,date_pointer):
-    if df['MACD_Hist'][date_pointer]*df['MACD_Hist'][date_pointer-1]<0: return True
-    else: return False
-
 binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240, "6h": 360, "12h": 720,
             "1d": 1440}
 batch_size = 750
 binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMrCl7lZhhJSIM1ijIzS',
                         api_secret='JjJRJ3bWQTEShF4Eu8ZigY9aEMGPnFNJMH3WoNlOQgxSgrHmLOflIavhMx0KSZFC')
-
-
-
 
 def f(x):
     print(x,symbol,data_step)
@@ -434,30 +429,54 @@ def f(x):
     print('==========')
     return money
 
-ali = {
+config = {
     'slow_window': [5, 6, 7, 12, 13, 26, 30, 40, 52],
     'fast_window': [4, 5, 6, 7, 12, 24, 30, 40, 48],
     'sign_window': [4, 6, 8, 9, 10, 12, 14, 16, 18, 20]
 }
 
-GA = mga(config=ali, function=f, run_iter=20, population_size=100, n_crossover=3,
+GA = mga(config=config, function=f, run_iter=20, population_size=100, n_crossover=3,
          crossover_mode='random')
 
 coins_datastep_list =[
-    ('LTCUSDT','1h'),
-    ('LTCUSDT','2h'),
-    ('BTCUSDT','1h'),
-    ('BTCUSDT','2h'),
+    # ('LTCUSDT','1h'),
+    # ('LTCUSDT','2h'),
+    # ('BTCUSDT','1h'),
+    # ('BTCUSDT','2h'),
+    # ('IOTAUSDT','1h'),
+    # ('IOTAUSDT','2h'),
+    # ('ETHUSDT','1h'),
+    # ('ETHUSDT','2h'),
+    # ('BNBUSDT','1h'),
+    # ('BNBUSDT','2h'),
+    # ('TRXUSDT', '1h'),
+    # ('TRXUSDT', '2h'),
+    # ('NEOUSDT', '1h'),
+    # ('NEOUSDT', '2h'),
+    ('LTCUSDT', '30m'),
+    ('BTCUSDT', '30m'),
+    ('IOTAUSDT','30m'),
+    ('ETHUSDT', '30m'),
+    ('BNBUSDT', '30m'),
+    ('TRXUSDT', '30m'),
+    ('NEOUSDT', '30m'),
 ]
 
+# region Data
+start_date = '1 Dec 2020'
+end_date = '2021-04-15 00:00:00'
+leverage = 1
+plot_width = 1500
+plot_height = 1000
+# endregion
 for symbol,data_step in coins_datastep_list:
-    # region Data
-    start_date = '1 Dec 2020'
-    end_date = '2021-04-15 00:00:00'
-    leverage = 1
-    plot_width = 1500
-    plot_height = 1000
-    # endregion
+    dh = DataHunter(symbol, start_date, end_date, data_step)
+    dh.download_data()
+
+for symbol, data_step in coins_datastep_list:
     best_params = GA.run()
     print(best_params)
     best_params.to_csv(f'Genetic-{symbol}-{start_date}-{data_step}.csv', index=True)
+
+
+# os.system("shutdown /s /t 1")
