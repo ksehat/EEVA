@@ -90,9 +90,7 @@ class DataHunter():
         return df
 
     def download_data(self):
-        filename = f'{self.symbol}-{self.step}-data-from-{self.start_date}.csv'
-        if not os.path.isfile(filename):
-            data_org = self._get_save_data()
+        self._get_save_data()
 
     def MACD_IND(self,data,win_slow,win_fast,win_sign,number):
         MACD_IND1 = MACD(data['close'],window_slow=win_slow,window_fast=win_fast,window_sign=win_sign)
@@ -114,3 +112,4 @@ class DataHunter():
 
 # a = DataHunter(symbol='BTCUSDT',start_date='1 Jan 2021', end_date='2021-03-25 00:00:00', step='1h').prepare_data()
 # print(a.columns)
+
