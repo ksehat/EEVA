@@ -557,7 +557,6 @@ coins_datastep_list =[
     # ('TRXUSDT', '30m'),
     # ('NEOUSDT', '30m'),
 ]
-
 # region Data
 start_date = '1 Apr 2020'
 end_date = '2021-04-15 00:00:00'

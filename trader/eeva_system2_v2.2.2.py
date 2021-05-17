@@ -186,9 +186,10 @@ def trader(*args):
         for data_step in data_steps:
             # region Data Preparation
             df  = DataHunter(symbol=symbol, start_date=start_date, end_date=end_date,
-                             step=data_step).prepare_data(macd_slow=26, macd_fast=12, macd_sign=9)
+                             step=data_step).prepare_data(macd_slow=args[0], macd_fast=args[1],
+                                                          macd_sign=args[2])
             df2 = DataHunter(symbol=symbol, start_date=start_date, end_date=end_date,
-                             step='30m').prepare_data(macd_slow=26, macd_fast=12, macd_sign=9)
+                             step='30m').prepare_data(macd_slow=args[0], macd_fast=args[1], macd_sign=args[2])
             ZC_Index = pd.DataFrame({'zcindex': df[df['MACD1_ZC'] == 1].index.values,
                                      'timestamp': df.loc[df['MACD1_ZC'] == 1, 'timestamp'],
                                      'MACD1_Hist': df.loc[df['MACD1_ZC'] == 1, 'MACD1_Hist']},
@@ -266,8 +267,7 @@ def trader(*args):
             XAB_del_list = []  # This the list of XABs that are rejected
             XAB_check_list = []  # This is the list of XABs that may be entered and are valid to enter but right now the system is in trade
             date_pointer2 = 0
-            date_pointer = XAB_list[0][1][4]
-            while date_pointer < len(df) - 1:
+            for date_pointer in range(XAB_list[0][1][4],len(df)):
                 date_pointer22 = equal_date_pointer(df, df2, date_pointer, date_pointer2, data_step)
                 XAB_valid_list = [x for x in XAB_list if date_pointer >= x[1][4]]  # This is the list of XABs before the date_pointer
                 for idx_xab, xab in enumerate(XAB_valid_list[::-1]):  # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xab_flag, sl, sudo_sl, dont_find_C]
@@ -302,6 +302,7 @@ def trader(*args):
                                                                                        XAB_check_list)
                             if xab == xab_buy:
                                 for date_pointer2 in [date_pointer22, date_pointer22 + 1]:
+                                    if enter==0 or date_pointer2>len(df2)-1: break
                                     if macd_phase_change(df2, date_pointer2): xab[3] = xab[4]
                                     # This is because when the phase is changed, first you need to
                                     # replace the sl with sudo_sl
@@ -329,10 +330,11 @@ def trader(*args):
                                                 print('money:', money)
                                             # # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
                                             # #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
-                                            # date_of_trade_list.append(df['timestamp'][date_pointer22])
-                                            # num_of_neg_trades_list.append(num_of_neg_trades)
-                                            # num_of_pos_trades_list.append(num_of_pos_trades)
-                                            # money_after_each_trade_list.append(money)
+                                            date_of_trade_list.append(df2['timestamp'][
+                                                                          date_pointer2])
+                                            num_of_neg_trades_list.append(num_of_neg_trades)
+                                            num_of_pos_trades_list.append(num_of_pos_trades)
+                                            money_after_each_trade_list.append(money)
                                             XAB_del_list.append(xab)
 
                                             if XAB_check_list:
@@ -341,7 +343,7 @@ def trader(*args):
                                                 xab_buy = XAB_check_list[-1]
                                                 enter_price = xab_buy[0][2]
                                                 del XAB_check_list[-1]
-                                                # money_before_each_trade_list.append(money)
+                                                money_before_each_trade_list.append(money)
                                         else:
                                             if XAB_check_list:
                                                 XAB_del_list.extend(XAB_check_list)
@@ -373,15 +375,13 @@ def trader(*args):
                                                 print('money:', money)
                                             # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
                                             #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
-                                            # date_of_trade_list.append(df['timestamp'][date_pointer])
-                                            # num_of_neg_trades_list.append(num_of_neg_trades)
-                                            # num_of_pos_trades_list.append(num_of_pos_trades)
-                                            # money_after_each_trade_list.append(money)
+                                            date_of_trade_list.append(df2['timestamp'][
+                                                                          date_pointer2])
+                                            num_of_neg_trades_list.append(num_of_neg_trades)
+                                            num_of_pos_trades_list.append(num_of_pos_trades)
+                                            money_after_each_trade_list.append(money)
                                             XAB_del_list.append(xab)
                                             if XAB_check_list:
-                                                # print('==================')
-                                                # print(XAB_check_list)
-                                                # print('==================')
                                                 enter = 1
                                                 index_buy = date_pointer
                                                 xab_buy = XAB_check_list[-1]
@@ -393,9 +393,6 @@ def trader(*args):
                                                 XAB_del_list.extend(XAB_check_list)
                                                 XAB_check_list = []
                                             stop_loss_trail(df2,date_pointer2,flag,xab)
-
-                date_pointer += 1
-
             print(money)
 
             # region
@@ -475,9 +472,6 @@ def trader(*args):
         Profit_Loss_Table_by_Year_Month_for_symbol.to_csv(f'{symbol}-{start_date}-'
                                                           f'{data_steps}-{args}-{money}.csv',
                                                           index=True)
-        # favorite_monthly_profit = 10
-        # monthly_profit_variance = np.mean(Profit_Loss_Table_by_Year_Month_for_symbol.iloc[:, 1] - favorite_monthly_profit)
-        # print(monthly_profit_variance)
 
 binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120,  "4h": 240,
             "6h": 360, "12h": 720, "1d": 1440}
@@ -486,15 +480,15 @@ binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMr
                         api_secret='JjJRJ3bWQTEShF4Eu8ZigY9aEMGPnFNJMH3WoNlOQgxSgrHmLOflIavhMx0KSZFC')
 
 """Data"""
-binance_symbols = ['LTCUSDT']
-start_date = '1 Apr 2021'
-end_date = '2021-07-01 00:00:00'
+binance_symbols = ['TRXUSDT']
+start_date = '1 Apr 2020'
+end_date = '2021-04-15 00:00:00'
 data_steps = ['1h']
 leverage = 1
 plot_width = 1500
 plot_height = 1000
 macd_list = [
-[5, 48, 8],
+[12, 30, 16],
              ]
 
 for macd_value in macd_list:
