@@ -481,14 +481,14 @@ binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMr
 
 """Data"""
 binance_symbols = ['TRXUSDT']
-start_date = '1 Apr 2020'
-end_date = '2021-04-15 00:00:00'
+start_date = '1 Jan 2021'
+end_date = '2021-02-15 00:00:00'
 data_steps = ['1h']
 leverage = 1
 plot_width = 1500
 plot_height = 1000
 macd_list = [
-[12, 30, 16],
+[26, 12, 9],
              ]
 
 for macd_value in macd_list:
