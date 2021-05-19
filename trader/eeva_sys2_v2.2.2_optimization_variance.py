@@ -527,7 +527,7 @@ coins_datastep_list =[
     # ('IOTAUSDT','30m'),
     # ('ETHUSDT', '30m'),
     # ('BNBUSDT', '30m'),
-    ('TRXUSDT', '30m'),
+    # ('TRXUSDT', '30m'),
     # ('NEOUSDT', '30m'),
 ]
 # region Data
