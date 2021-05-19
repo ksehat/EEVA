@@ -41,6 +41,7 @@ class DataHunter():
         return old, new
 
     def _get_save_data(self, save=True):
+        binance_client = Client(api_key=self.api_key, api_secret=self.api_secret)
         filename = f'{self.symbol}-{self.step}-data-from-{self.start_date}.csv'
         if os.path.isfile(filename):
             data_df = pd.read_csv(filename)
@@ -55,7 +56,7 @@ class DataHunter():
         else:
             print('Downloading %d minutes of new data available for %s, i.e. %d instances of %s data.' % (
             delta_min, self.symbol, available_data, self.step))
-        klines = self.binance_client.get_historical_klines(self.symbol, self.step,
+        klines = binance_client.get_historical_klines(self.symbol, self.step,
                                                       oldest_point.strftime("%d %b %Y %H:%M:%S"),
                                                       newest_point.strftime("%d %b %Y %H:%M:%S"))
         data = pd.DataFrame(klines,
