@@ -27,17 +27,17 @@ class DataHunter():
         self.source = 'binance'
         self.api_key = binance_api_key
         self.api_secret = binance_api_secret
-        self.binance_client = Client(api_key=self.api_key, api_secret=self.api_secret)
         self.binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240, "6h": 360, "12h": 720, "1d": 1440}
         self.batch_size = 750
 
     def _minutes_of_new_data(self, data):
+        binance_client = Client(api_key=self.api_key, api_secret=self.api_secret)
         if len(data) > 0:
             old = parser.parse(data["timestamp"].iloc[-1])
         elif self.source == "binance":
             old = datetime.strptime(self.start_date, '%d %b %Y')
         if self.source == "binance": new = pd.to_datetime(
-            self.binance_client.get_klines(symbol=self.symbol, interval=self.step)[-1][0], unit='ms')
+            binance_client.get_klines(symbol=self.symbol, interval=self.step)[-1][0], unit='ms')
         return old, new
 
     def _get_save_data(self, save=True):
