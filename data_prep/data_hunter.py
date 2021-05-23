@@ -85,8 +85,8 @@ class DataHunter():
         data1 = copy.deepcopy(data.astype(float))
         data2 = self.Ichi_IND(data1,9,26,52)
         data3 = self.MACD_IND(data2,macd_slow,macd_fast,macd_sign,1)#6,24,12
-        data4 = self.MACD_IND(data3, macd2_slow, macd2_fast, macd2_sign, 2)  # 6,24,12
-        df = data4.copy(deep=True)
+        # data4 = self.MACD_IND(data3, macd2_slow, macd2_fast, macd2_sign, 2)  # 6,24,12
+        df = data3.copy(deep=True)
         df.reset_index(inplace=True)
         return df
 

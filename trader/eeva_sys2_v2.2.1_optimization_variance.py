@@ -61,7 +61,7 @@ def plot_figure(df, index_X, index_A, index_B, index_C, index_buy, index_sell, X
     fig.show()
 
 def macd_phase_change(df,date_pointer):
-    if df['MACD_Hist'][date_pointer]*df['MACD_Hist'][date_pointer-1]<0: return True
+    if df['MACD1_Hist'][date_pointer]*df['MACD1_Hist'][date_pointer-1]<0: return True
     else: return False
 
 def print_trade(df,X,A,B,xab,enter_price,exit_price,index_X,index_A,index_B,index_buy,index_sell):
@@ -149,41 +149,41 @@ def xab_completor(df,date_pointer,xab, XAB_del_list):
 
     if flag == 1:  # long
         if xab[0][3]:
-            if df['MACD_Hist'][date_pointer] < 0 and xab[5] == 0:  # dont_find_C = xab[0][5]
+            if df['MACD1_Hist'][date_pointer] < 0 and xab[5] == 0:  # dont_find_C = xab[0][5]
                 if df['low'][date_pointer] <= xab[0][3]:
                     xab[0][3] = df['low'][date_pointer]
                     xab[1][3] = date_pointer
-            if df['MACD_Hist'][date_pointer] > 0:
+            if df['MACD1_Hist'][date_pointer] > 0:
                 xab[5] = 1
                 xab[3] = xab[0][3]
                 xab[4] = xab[0][3]
         if not xab[0][3] and not xab[5]:
-            if df['low'][date_pointer] <= A and df['MACD_Hist'][date_pointer] < 0 and xab[5] == 0:
+            if df['low'][date_pointer] <= A and df['MACD1_Hist'][date_pointer] < 0 and xab[5] == 0:
                 xab[0][3] = df['low'][date_pointer]
                 xab[1][3] = date_pointer
                 xab[3] = xab[0][3]
                 xab[4] = xab[0][3]
-            if df['MACD_Hist'][date_pointer] > 0:
+            if df['MACD1_Hist'][date_pointer] > 0:
                 xab[5] = 1
                 XAB_del_list.append(xab)
 
     if flag == 0:  # short
         if xab[0][3]:
-            if df['MACD_Hist'][date_pointer] > 0 and xab[5] == 0:
+            if df['MACD1_Hist'][date_pointer] > 0 and xab[5] == 0:
                 if df['high'][date_pointer] >= xab[0][3]:
                     xab[0][3] = df['high'][date_pointer]
                     xab[1][3] = date_pointer
-            if df['MACD_Hist'][date_pointer] < 0:
+            if df['MACD1_Hist'][date_pointer] < 0:
                 xab[5] = 1
                 xab[3] = xab[0][3]
                 xab[4] = xab[0][3]
         if not xab[0][3] and not xab[5]:
-            if df['high'][date_pointer] >= A and df['MACD_Hist'][date_pointer] > 0 and xab[5] == 0:
+            if df['high'][date_pointer] >= A and df['MACD1_Hist'][date_pointer] > 0 and xab[5] == 0:
                 xab[0][3] = df['high'][date_pointer]
                 xab[1][3] = date_pointer
                 xab[3] = xab[0][3]
                 xab[4] = xab[0][3]
-            if df['MACD_Hist'][date_pointer] < 0:
+            if df['MACD1_Hist'][date_pointer] < 0:
                 xab[5] = 1
                 XAB_del_list.append(xab)
 
@@ -207,37 +207,24 @@ def xab_reject_decision(df,dp,xab,XAB_del_list,XAB_check_list):
 binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240, "6h": 360, "12h": 720,
             "1d": 1440}
 batch_size = 750
-binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMrCl7lZhhJSIM1ijIzS',
-                        api_secret='JjJRJ3bWQTEShF4Eu8ZigY9aEMGPnFNJMH3WoNlOQgxSgrHmLOflIavhMx0KSZFC')
+
 
 def f(x):
     print(x,symbol,data_step)
     Profit_Loss_Table_by_Year_Month_for_symbol = pd.DataFrame()
-    filename = f'{symbol}-{data_step}-data-from-{start_date}.csv'
-    if os.path.isfile(filename):
-        data_org = pd.read_csv(filename, index_col=0)
-    else:
-        data_org = get_all_binance(symbol, data_step, start_date, save=True)
-
-    data_org.index = data_org.index.map(lambda x: x if type(x) == str else str(x))
-    data_org = data_org[~data_org.index.duplicated(keep='last')]
-    data = data_org[:end_date].filter(['open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_av',
-                                       'trades', 'tb_base_av', 'tb_quote_av'])
-    data1 = data.astype(float).copy(deep=True)
-    data2 = Ichi(data1, 9, 26, 52)
-    data3 = MACD_IND(data2,x[0],x[1],x[2])
-    df = data3.copy(deep=True)
-    df.reset_index(inplace=True)
-    ZC_Index = pd.DataFrame({'zcindex': df[df['MACD_ZC'] == 1].index.values,
-                             'timestamp': df.loc[df['MACD_ZC'] == 1, 'timestamp'],
-                             'MACD_Hist': df.loc[df['MACD_ZC'] == 1, 'MACD_Hist']},
-                            columns=['zcindex', 'timestamp', 'MACD_Hist']).reset_index(drop=True)
+    df = DataHunter(symbol=symbol, start_date=start_date, end_date=end_date,
+                    step=data_step).prepare_data(macd_slow=x[0], macd_fast=x[1],
+                                                 macd_sign=x[2])
+    ZC_Index = pd.DataFrame({'zcindex': df[df['MACD1_ZC'] == 1].index.values,
+                             'timestamp': df.loc[df['MACD1_ZC'] == 1, 'timestamp'],
+                             'MACD1_Hist': df.loc[df['MACD1_ZC'] == 1, 'MACD1_Hist']},
+                            columns=['zcindex', 'timestamp', 'MACD1_Hist']).reset_index(drop=True)
     # region XAB Hunter
     # TODO: we have to change the strategy of XAB
     XAB_list = []
     for row_zcindex, zcindex in ZC_Index.iterrows():
         if row_zcindex + 3 <= len(ZC_Index) - 1:
-            if df['MACD_Hist'][zcindex[0]] >= 0:
+            if df['MACD1_Hist'][zcindex[0]] >= 0:
                 # region XAB Finder
                 X = max(df.iloc[zcindex[0]: ZC_Index.iloc[row_zcindex + 1, 0]]['high'])
                 index_X = df.iloc[zcindex[0]: ZC_Index.iloc[row_zcindex + 1, 0]]['high'].idxmax()
@@ -254,7 +241,7 @@ def f(x):
                         [[X, A, B, None], [index_X, index_A, index_B, None, Index_4], xab_flag, None, None, 0])
                 # endregion
 
-            if df['MACD_Hist'][zcindex[0]] < 0:
+            if df['MACD1_Hist'][zcindex[0]] < 0:
                 # region XAB Finder
                 X = min(df.iloc[zcindex[0]: ZC_Index.iloc[row_zcindex + 1, 0]]['low'])
                 index_X = df.iloc[zcindex[0]: ZC_Index.iloc[row_zcindex + 1, 0]]['low'].idxmin()
@@ -370,12 +357,12 @@ def f(x):
                                 if XAB_check_list:
                                     XAB_del_list.extend(XAB_check_list)
                                     XAB_check_list = []
-                                if df['MACD_Hist'][date_pointer] < 0:
+                                if df['MACD1_Hist'][date_pointer] < 0:
                                     if macd_phase_change(df, date_pointer):
                                         xab[4] = df['low'][date_pointer]
                                     elif df['low'][date_pointer] <= xab[4]:
                                         xab[4] = df['low'][date_pointer]
-                                if df['MACD_Hist'][date_pointer] > 0: xab[3] = xab[4]
+                                if df['MACD1_Hist'][date_pointer] > 0: xab[3] = xab[4]
                         if flag == 0:
                             if df['high'][date_pointer] > xab[3]:
                                 enter = 0
@@ -419,12 +406,12 @@ def f(x):
                                 if XAB_check_list:
                                     XAB_del_list.extend(XAB_check_list)
                                     XAB_check_list = []
-                                if df['MACD_Hist'][date_pointer] > 0:
+                                if df['MACD1_Hist'][date_pointer] > 0:
                                     if macd_phase_change(df, date_pointer):
                                         xab[4] = df['high'][date_pointer]
                                     elif df['high'][date_pointer] >= xab[4]:
                                         xab[4] = df['high'][date_pointer]
-                                if df['MACD_Hist'][date_pointer] < 0: xab[3] = xab[4]
+                                if df['MACD1_Hist'][date_pointer] < 0: xab[3] = xab[4]
     # region
     """ If there is a buy position but still the sell position doesn't
     occur it would be a problem and this problem is solved in this region
@@ -536,24 +523,15 @@ GA = mga(config=config, function=f, run_iter=20, population_size=100, n_crossove
 
 coins_datastep_list =[
     # ('LTCUSDT','1h'),
-    # ('LTCUSDT','2h'),
-    # ('BTCUSDT','1h'),
-    # ('BTCUSDT','2h'),
-    # ('IOTAUSDT','1h'),
-    # ('IOTAUSDT','2h'),
-    # ('ETHUSDT','1h'),
-    # ('ETHUSDT','2h'),
-    # ('BNBUSDT','1h'),
-    # ('BNBUSDT','2h'),
+    ('BTCUSDT','1h'),
+    ('IOTAUSDT','1h'),
+    ('ETHUSDT','1h'),
     ('TRXUSDT', '1h'),
-    # ('TRXUSDT', '2h'),
-    # ('NEOUSDT', '1h'),
-    # ('NEOUSDT', '2h'),
+    ('NEOUSDT', '1h'),
     # ('LTCUSDT', '30m'),
     # ('BTCUSDT', '30m'),
     # ('IOTAUSDT','30m'),
     # ('ETHUSDT', '30m'),
-    # ('BNBUSDT', '30m'),
     # ('TRXUSDT', '30m'),
     # ('NEOUSDT', '30m'),
 ]
@@ -564,14 +542,14 @@ leverage = 1
 plot_width = 1500
 plot_height = 1000
 # endregion
-for symbol,data_step in coins_datastep_list:
-    dh = DataHunter(symbol, start_date, end_date, data_step)
-    dh.download_data()
+# for symbol,data_step in coins_datastep_list:
+#     dh = DataHunter(symbol, start_date, end_date, data_step)
+#     dh.download_data()
 
 for symbol, data_step in coins_datastep_list:
     best_params = GA.run()
     print(best_params)
-    best_params.to_csv(f'Genetic-{symbol}-{start_date}-{data_step}.csv', index=True)
+    best_params.to_csv(f'Genetic-v2.2.1-{symbol}-{start_date}-{data_step}.csv', index=True)
 
 
-# os.system("shutdown /s /t 1")
+os.system("shutdown /s /t 1")

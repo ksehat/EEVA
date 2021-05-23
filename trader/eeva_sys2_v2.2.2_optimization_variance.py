@@ -508,27 +508,18 @@ GA = mga(config=config, function=trader, run_iter=20, population_size=100, n_cro
          crossover_mode='random')
 
 coins_datastep_list =[
-    # ('LTCUSDT','1h'),
-    # ('LTCUSDT','2h'),
-    # ('BTCUSDT','1h'),
-    # ('BTCUSDT','2h'),
-    # ('IOTAUSDT','1h'),
-    # ('IOTAUSDT','2h'),
-    # ('ETHUSDT','1h'),
-    # ('ETHUSDT','2h'),
-    # ('BNBUSDT','1h'),
-    # ('BNBUSDT','2h'),
+    ('LTCUSDT','1h'),
+    ('BTCUSDT','1h'),
+    ('IOTAUSDT','1h'),
+    ('ETHUSDT','1h'),
     ('TRXUSDT', '1h'),
-    # ('TRXUSDT', '2h'),
-    # ('NEOUSDT', '1h'),
-    # ('NEOUSDT', '2h'),
-    # ('LTCUSDT', '30m'),
-    # ('BTCUSDT', '30m'),
-    # ('IOTAUSDT','30m'),
-    # ('ETHUSDT', '30m'),
-    # ('BNBUSDT', '30m'),
-    # ('TRXUSDT', '30m'),
-    # ('NEOUSDT', '30m'),
+    ('NEOUSDT', '1h'),
+    ('LTCUSDT', '30m'),
+    ('BTCUSDT', '30m'),
+    ('IOTAUSDT','30m'),
+    ('ETHUSDT', '30m'),
+    ('TRXUSDT', '30m'),
+    ('NEOUSDT', '30m'),
 ]
 # region Data
 start_date = '1 Apr 2020'
@@ -541,10 +532,10 @@ for symbol,data_step in coins_datastep_list:
     dh = DataHunter(symbol, start_date, end_date, data_step)
     dh.download_data()
 
-for symbol, data_step in coins_datastep_list:
-    best_params = GA.run()
-    print(best_params)
-    best_params.to_csv(f'Genetic-{symbol}-{start_date}-{data_step}.csv', index=True)
-
-
-os.system("shutdown /s /t 1")
+# for symbol, data_step in coins_datastep_list:
+#     best_params = GA.run()
+#     print(best_params)
+#     best_params.to_csv(f'Genetic-{symbol}-{start_date}-{data_step}.csv', index=True)
+#
+#
+# os.system("shutdown /s /t 1")
