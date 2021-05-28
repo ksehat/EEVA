@@ -523,12 +523,12 @@ GA = mga(config=config, function=f, run_iter=20, population_size=100, n_crossove
 
 coins_datastep_list =[
     # ('LTCUSDT','1h'),
-    ('BTCUSDT','1h'),
-    ('IOTAUSDT','1h'),
-    ('ETHUSDT','1h'),
-    ('TRXUSDT', '1h'),
-    ('NEOUSDT', '1h'),
-    # ('LTCUSDT', '30m'),
+    # ('BTCUSDT','1h'),
+    # ('IOTAUSDT','1h'),
+    # ('ETHUSDT','1h'),
+    # ('TRXUSDT', '1h'),
+    # ('NEOUSDT', '1h'),
+    ('LTCUSDT', '30m'),
     # ('BTCUSDT', '30m'),
     # ('IOTAUSDT','30m'),
     # ('ETHUSDT', '30m'),
