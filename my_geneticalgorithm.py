@@ -109,10 +109,12 @@ class MyGeneticAlgorithm():
             'score': score_list
         })
         population_score_df.sort_values('score', inplace=True, ignore_index=True, ascending=False)
-        new_population_score_df = pd.DataFrame({'members': [list(range(len(self.variables_list)))] *
+        new_population_score_df = pd.DataFrame({'members': [list(np.full(len(self.variables_list),np.nan))] *
                                                            self.population_size,
-                                                'score': list(np.zeros(self.population_size))
+                                                'score': list(np.full([self.population_size],
+                                                                      np.nan))
                                                 })
+        new_population_score_df[:n_keep] = copy.deepcopy(population_score_df[:n_keep])
         # endregion
         # region iter until required score is satisfied
         run_iter = 1
@@ -179,6 +181,7 @@ class MyGeneticAlgorithm():
 # def f(X):
 #     return (X[0]+X[1]+X[2])
 #
-# ga = MyGeneticAlgorithm(config=ali,function=f,run_iter=5, population_size=40, n_crossover=3, crossover_mode='random')
+# ga = MyGeneticAlgorithm(config=ali,function=f,run_iter=5, population_size=20, n_crossover=3,
+#                         crossover_mode='random')
 # best_params=ga.run()
 # print(best_params)
