@@ -518,17 +518,17 @@ config = {
     'sign_window': [4, 6, 8, 9, 10, 12, 14, 16, 18, 20]
 }
 
-GA = mga(config=config, function=f, run_iter=10, population_size=40, n_crossover=5,
+GA = mga(config=config, function=f, run_iter=10, population_size=100, n_crossover=5,
          crossover_mode='random')
 
 coins_datastep_list =[
-    # ('LTCUSDT','1h'),
+    ('LTCUSDT','1h'),
     # ('BTCUSDT','1h'),
     # ('IOTAUSDT','1h'),
     # ('ETHUSDT','1h'),
     # ('TRXUSDT', '1h'),
     # ('NEOUSDT', '1h'),
-    ('LTCUSDT', '30m'),
+    # ('LTCUSDT', '30m'),
     # ('BTCUSDT', '30m'),
     # ('IOTAUSDT','30m'),
     # ('ETHUSDT', '30m'),
