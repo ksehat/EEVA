@@ -368,8 +368,7 @@ def trader(*args):
         date_pointer22 = equal_date_pointer(df, df2, date_pointer, date_pointer2, data_step)
         XAB_valid_list = [x for x in XAB_list if date_pointer >= x[1][
             4]]  # This is the list of XABs before the date_pointer
-        for idx_xab, xab in enumerate(XAB_valid_list[
-                                      ::-1]):  # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xab_flag, sl, sudo_sl, dont_find_C]
+        for idx_xab, xab in enumerate(XAB_valid_list[::-1]):  # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xab_flag, sl, sudo_sl, dont_find_C]
             if xab not in XAB_del_list:
                 X, A, B, index_X, index_A, index_B, index_4, flag = xab_initializer(xab)
                 if enter == 0:
@@ -434,7 +433,7 @@ def trader(*args):
                                         money_before_each_trade_list, index_buy, xab_buy,
                                         enter_price)
 
-                                else:
+                                else: # TODO: this can be handled in a function (note: after else)
                                     if XAB_check_list:
                                         XAB_del_list.extend(XAB_check_list)
                                         XAB_check_list = []
@@ -469,7 +468,7 @@ def trader(*args):
                                         enter, date_pointer, XAB_check_list, money,
                                         money_before_each_trade_list, index_buy, xab_buy,
                                         enter_price)
-                                else:
+                                else: # TODO: this can be handled in a function (note: after else)
                                     if XAB_check_list:
                                         XAB_del_list.extend(XAB_check_list)
                                         XAB_check_list = []
