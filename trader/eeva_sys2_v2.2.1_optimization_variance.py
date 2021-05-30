@@ -518,7 +518,7 @@ config = {
     'sign_window': [4, 6, 8, 9, 10, 12, 14, 16, 18, 20]
 }
 
-GA = mga(config=config, function=f, run_iter=20, population_size=100, n_crossover=3,
+GA = mga(config=config, function=f, run_iter=10, population_size=40, n_crossover=5,
          crossover_mode='random')
 
 coins_datastep_list =[
