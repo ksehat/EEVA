@@ -518,7 +518,7 @@ config = {
     'sign_window': [4, 6, 8, 9, 10, 12, 14, 16, 18, 20]
 }
 
-GA = mga(config=config, function=f, run_iter=10, population_size=100, n_crossover=5,
+GA = mga(config=config, function=f, run_iter=10, population_size=60, n_crossover=3,
          crossover_mode='random')
 
 coins_datastep_list =[
@@ -552,4 +552,4 @@ for symbol, data_step in coins_datastep_list:
     best_params.to_csv(f'Genetic-v2.2.1-{symbol}-{start_date}-{data_step}.csv', index=True)
 
 
-os.system("shutdown /s /t 1")
+# os.system("shutdown /s /t 1")
