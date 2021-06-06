@@ -83,7 +83,7 @@ class MyGeneticAlgorithm():
         member[mutation_point] = random.sample(params_list, k=1)[0]
         return member
 
-    def run(self, keep_frac: float = 10, crossover_frac: float = 10, mutate_frac: float = 35):
+    def run(self, keep_frac: float = 10, crossover_frac: float = 10, mutate_frac: float = 15):
         n_keep = math.floor((keep_frac / 100) * self.population_size)
         n_crossover = math.floor((crossover_frac / 100) * self.population_size)
         n_mutate = math.floor((mutate_frac / 100) * self.population_size)
