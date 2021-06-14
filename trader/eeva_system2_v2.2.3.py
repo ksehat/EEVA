@@ -249,8 +249,7 @@ def money_calc(df, date_pointer, flag, xab, exit_price, B, leverage, trade_fee,
             print('money:', money)
     # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
     #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
-    date_of_trade_list.append(df['timestamp'][
-                                  date_pointer])
+    date_of_trade_list.append(df['timestamp'][date_pointer])
     num_of_neg_trades_list.append(num_of_neg_trades)
     num_of_pos_trades_list.append(num_of_pos_trades)
     money_after_each_trade_list.append(money)
@@ -261,25 +260,25 @@ def money_calc(df, date_pointer, flag, xab, exit_price, B, leverage, trade_fee,
             XAB_del_list, num_of_pos_trades, num_of_neg_trades)
 
 
-def enter_check_with_cheklist(enter, date_pointer, XAB_check_list1, money,
-                              money_before_each_trade_list1,index_buy, xab_buy, enter_price):
+def enter_check_with_cheklist(enter, date_pointer, XAB_check_list1, money, money1,
+                              money_before_each_trade_list1, index_buy, xab_buy, enter_price):
     XAB_check_list = copy.deepcopy(XAB_check_list1)
     money_before_each_trade_list = copy.deepcopy(money_before_each_trade_list1)
     if XAB_check_list:
         enter = 1
+        money1 = None
         index_buy = date_pointer
         xab_buy = XAB_check_list[-1]
         enter_price = xab_buy[0][2]
         del XAB_check_list[-1]
         money_before_each_trade_list.append(money)
-    return enter, index_buy, xab_buy, enter_price, XAB_check_list, money_before_each_trade_list
+    return enter, index_buy, xab_buy, enter_price, XAB_check_list, money_before_each_trade_list, \
+           money1
 
 
 def trader(*args):
     # print(args[0],args[1],args[2])
-
     Profit_Loss_Table_by_Year_Month_for_symbol = pd.DataFrame()
-
     # region Data Preparation
     df = DataHunter(symbol=symbol, start_date=start_date, end_date=end_date,
                     step=data_step).prepare_data(macd_slow=args[0], macd_fast=args[1],
@@ -364,11 +363,13 @@ def trader(*args):
     XAB_del_list = []  # This the list of XABs that are rejected
     XAB_check_list = []  # This is the list of XABs that may be entered and are valid to enter but right now the system is in trade
     date_pointer2 = 0
+    flag1 = 0
     for date_pointer in range(XAB_list[0][1][4], len(df)):
         date_pointer22 = equal_date_pointer(df, df2, date_pointer, date_pointer2, data_step)
         XAB_valid_list = [x for x in XAB_list if date_pointer >= x[1][
             4]]  # This is the list of XABs before the date_pointer
-        for idx_xab, xab in enumerate(XAB_valid_list[::-1]):  # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xab_flag, sl, sudo_sl, dont_find_C]
+        for idx_xab, xab in enumerate(XAB_valid_list[
+                                      ::-1]):  # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xab_flag, sl, sudo_sl, dont_find_C]
             if xab not in XAB_del_list:
                 X, A, B, index_X, index_A, index_B, index_4, flag = xab_initializer(xab)
                 if enter == 0:
@@ -376,6 +377,7 @@ def trader(*args):
                     if xab[0][3]:
                         enter = xab_enter_check(df, date_pointer, xab, enter)
                     if enter == 1:
+                        money1 = None
                         index_buy = date_pointer
                         xab_buy = xab
                         enter_price = xab[0][2]
@@ -406,73 +408,231 @@ def trader(*args):
                             # replace the sl with sudo_sl
                             if flag == 1:
                                 if df2['low'][date_pointer2] < xab[3]:
-                                    enter = 0
-                                    index_sell = date_pointer2
-                                    exit_price = xab[3]
-                                    print_trade(df, df2, X, A, B, xab, enter_price, exit_price,
-                                                index_X, index_A, index_B,
-                                                index_buy, index_sell)
-                                    money, profit_loss_list, date_of_trade_list, \
-                                    num_of_neg_trades_list, num_of_pos_trades_list, \
-                                    money_after_each_trade_list, XAB_del_list, num_of_pos_trades, \
-                                    num_of_neg_trades = \
-                                        money_calc(df2, date_pointer2, flag, xab, exit_price, B,
-                                                   leverage, trade_fee,
-                                                   money,
-                                                   profit_loss_list,
-                                                   date_of_trade_list,
-                                                   num_of_neg_trades_list,
-                                                   num_of_pos_trades_list,
-                                                   money_after_each_trade_list,
-                                                   XAB_del_list,
-                                                   num_of_pos_trades,
-                                                   num_of_neg_trades)
-                                    enter, index_buy, xab_buy, enter_price, XAB_check_list, \
-                                    money_before_each_trade_list = enter_check_with_cheklist(
-                                        enter, date_pointer, XAB_check_list, money,
-                                        money_before_each_trade_list, index_buy, xab_buy,
-                                        enter_price)
+                                    if money1 == None:
+                                        enter = 0
+                                        flag1 = 0
+                                        index_sell = date_pointer2
+                                        exit_price = xab[3]
+                                        print_trade(df, df2, X, A, B, xab, enter_price, exit_price,
+                                                    index_X, index_A, index_B,
+                                                    index_buy, index_sell)
+                                        money, profit_loss_list, date_of_trade_list, \
+                                        num_of_neg_trades_list, num_of_pos_trades_list, \
+                                        money_after_each_trade_list, XAB_del_list, num_of_pos_trades, \
+                                        num_of_neg_trades = \
+                                            money_calc(df2, date_pointer2, flag, xab, exit_price, B,
+                                                       leverage, trade_fee,
+                                                       money,
+                                                       profit_loss_list,
+                                                       date_of_trade_list,
+                                                       num_of_neg_trades_list,
+                                                       num_of_pos_trades_list,
+                                                       money_after_each_trade_list,
+                                                       XAB_del_list,
+                                                       num_of_pos_trades,
+                                                       num_of_neg_trades)
+                                        enter, index_buy, xab_buy, enter_price, XAB_check_list, \
+                                        money_before_each_trade_list, \
+                                        money1 = enter_check_with_cheklist(
+                                            enter, date_pointer, XAB_check_list, money, money1,
+                                            money_before_each_trade_list, index_buy, xab_buy,
+                                            enter_price)
+                                    else:  # if there is something in money1
+                                        enter = 0
+                                        flag1 = 0
+                                        index_sell = date_pointer2
+                                        exit_price = xab[3]
+                                        print_trade(df, df2, X, A, B, xab, enter_price, exit_price,
+                                                    index_X, index_A, index_B,
+                                                    index_buy, index_sell)
+                                        money_temp = money
+                                        pl = (exit_price - enter_price) / enter_price
+                                        print('pl:',pl)
+                                        money = money1 + money / 2 + pl * money / 2
+                                        pl_tot = (money - money_temp) / money_temp
+                                        if pl_tot < 0:
+                                            num_of_neg_trades += 1
+                                            print('loss:', pl_tot)
+                                        if pl_tot > 0:
+                                            num_of_pos_trades += 1
+                                            print('profit:', pl_tot)
+                                        print('money:', money)
+                                        profit_loss_list.append(pl_tot)
+                                        enter, index_buy, xab_buy, enter_price, XAB_check_list, \
+                                        money_before_each_trade_list, \
+                                        money1 = enter_check_with_cheklist(
+                                            enter, date_pointer, XAB_check_list, money, money1,
+                                            money_before_each_trade_list, index_buy, xab_buy,
+                                            enter_price)
+                                elif df2['high'][date_pointer2] > (1.618 * abs(xab[0][2] - xab[0][
+                                    3]) + xab[0][3]):
+                                    if flag1 == 0:
+                                        print("sell in 1.618:")
+                                        index_sell = date_pointer2
+                                        exit_price = (
+                                                1.618 * abs(xab[0][2] - xab[0][3]) + xab[0][3])
+                                        print_trade(df, df2, X, A, B, xab, enter_price, exit_price,
+                                                    index_X, index_A, index_B,
+                                                    index_buy, index_sell)
+                                        pl = (exit_price - enter_price) / enter_price
+                                        print('pl1:',pl)
+                                        money1 = money / 2 + pl * money / 2
+                                        print('money1:', money1)
+                                        flag1 = 1
+                                    if df2['high'][date_pointer2] > (2 * abs(xab[0][2] - xab[0][
+                                        3]) + xab[0][3]):
+                                        enter = 0
+                                        flag1 = 0
+                                        index_sell = date_pointer2
+                                        exit_price = (2 * abs(xab[0][2] - xab[0][3]) + xab[0][3])
+                                        print_trade(df, df2, X, A, B, xab, enter_price, exit_price,
+                                                    index_X, index_A, index_B,
+                                                    index_buy, index_sell)
+                                        money_temp = money
+                                        pl = (exit_price - enter_price) / enter_price
+                                        print('pl:',pl)
+                                        money = money1 + money / 2 + pl * money / 2
+                                        pl_tot = (money - money_temp) / money_temp
+                                        if pl_tot < 0:  # it will never happen
+                                            num_of_neg_trades += 1
+                                            print('loss:', pl_tot)
+                                        if pl_tot > 0:
+                                            num_of_pos_trades += 1
+                                            print('profit:', pl_tot)
+                                        print('money:', money)
+                                        profit_loss_list.append(pl_tot)
+                                        date_of_trade_list.append(df['timestamp'][date_pointer2])
+                                        num_of_neg_trades_list.append(num_of_neg_trades)
+                                        num_of_pos_trades_list.append(num_of_pos_trades)
+                                        money_after_each_trade_list.append(money)
+                                        XAB_del_list.append(xab)
+                                        enter, index_buy, xab_buy, enter_price, XAB_check_list, \
+                                        money_before_each_trade_list, \
+                                        money1 = enter_check_with_cheklist(
+                                            enter, date_pointer, XAB_check_list, money, money1,
+                                            money_before_each_trade_list, index_buy, xab_buy,
+                                            enter_price)
 
-                                else: # TODO: this can be handled in a function (note: after else)
+                                else:  # TODO: this can be handled in a function (note:
+                                    # after else)
                                     if XAB_check_list:
                                         XAB_del_list.extend(XAB_check_list)
                                         XAB_check_list = []
                                     stop_loss_trail(df2, date_pointer2, flag, xab)
-
                             if flag == 0:
                                 if df2['high'][date_pointer2] > xab[3]:
-                                    enter = 0
-                                    index_sell = date_pointer2
-                                    exit_price = xab[3]
-                                    print_trade(df, df2, X, A, B, xab, enter_price, \
-                                                exit_price,
-                                                index_X, index_A, index_B,
-                                                index_buy, index_sell)
-                                    money, profit_loss_list, date_of_trade_list, \
-                                    num_of_neg_trades_list, num_of_pos_trades_list, \
-                                    money_after_each_trade_list, XAB_del_list, num_of_pos_trades, \
-                                    num_of_neg_trades = \
-                                        money_calc(df2, date_pointer2, flag, xab, exit_price, B,
-                                                   leverage, trade_fee,
-                                                   money,
-                                                   profit_loss_list,
-                                                   date_of_trade_list,
-                                                   num_of_neg_trades_list,
-                                                   num_of_pos_trades_list,
-                                                   money_after_each_trade_list,
-                                                   XAB_del_list,
-                                                   num_of_pos_trades,
-                                                   num_of_neg_trades)
-                                    enter, index_buy, xab_buy, enter_price, XAB_check_list, \
-                                    money_before_each_trade_list = enter_check_with_cheklist(
-                                        enter, date_pointer, XAB_check_list, money,
-                                        money_before_each_trade_list, index_buy, xab_buy,
-                                        enter_price)
-                                else: # TODO: this can be handled in a function (note: after else)
+                                    if money1 == None:
+                                        enter = 0
+                                        flag1 = 0
+                                        index_sell = date_pointer2
+                                        exit_price = xab[3]
+                                        print_trade(df, df2, X, A, B, xab, enter_price, exit_price,
+                                                    index_X, index_A, index_B,
+                                                    index_buy, index_sell)
+                                        money, profit_loss_list, date_of_trade_list, \
+                                        num_of_neg_trades_list, num_of_pos_trades_list, \
+                                        money_after_each_trade_list, XAB_del_list, num_of_pos_trades, \
+                                        num_of_neg_trades = \
+                                            money_calc(df2, date_pointer2, flag, xab, exit_price, B,
+                                                       leverage, trade_fee,
+                                                       money,
+                                                       profit_loss_list,
+                                                       date_of_trade_list,
+                                                       num_of_neg_trades_list,
+                                                       num_of_pos_trades_list,
+                                                       money_after_each_trade_list,
+                                                       XAB_del_list,
+                                                       num_of_pos_trades,
+                                                       num_of_neg_trades)
+                                        enter, index_buy, xab_buy, enter_price, XAB_check_list, \
+                                        money_before_each_trade_list, \
+                                        money1 = enter_check_with_cheklist(
+                                            enter, date_pointer, XAB_check_list, money, money1,
+                                            money_before_each_trade_list, index_buy, xab_buy,
+                                            enter_price)
+                                    else:  # if there is something in money1
+                                        enter = 0
+                                        flag1 = 0
+                                        index_sell = date_pointer2
+                                        exit_price = xab[3]
+                                        print_trade(df, df2, X, A, B, xab, enter_price, exit_price,
+                                                    index_X, index_A, index_B,
+                                                    index_buy, index_sell)
+                                        money_temp = money
+                                        pl = (-exit_price + enter_price) / enter_price
+                                        print('pl:',pl)
+                                        money = money1 + money / 2 + pl * money / 2
+                                        pl_tot = (money - money_temp) / money_temp
+                                        if pl_tot < 0:
+                                            num_of_neg_trades += 1
+                                            print('loss:', pl_tot)
+                                        if pl_tot > 0:
+                                            num_of_pos_trades += 1
+                                            print('profit:', pl_tot)
+                                        print('money:', money)
+                                        profit_loss_list.append(pl_tot)
+                                        enter, index_buy, xab_buy, enter_price, XAB_check_list, \
+                                        money_before_each_trade_list, \
+                                        money1 = enter_check_with_cheklist(
+                                            enter, date_pointer, XAB_check_list, money, money1,
+                                            money_before_each_trade_list, index_buy, xab_buy,
+                                            enter_price)
+                                elif df2['low'][date_pointer2] < (
+                                        xab[0][3] - 1.618 * abs(xab[0][2] - xab[0][3])):
+                                    if flag1 == 0:
+                                        print("sell in 1.618:")
+                                        index_sell = date_pointer2
+                                        exit_price = (
+                                                    xab[0][3] - 1.618 * abs(xab[0][2] - xab[0][3]))
+                                        print_trade(df, df2, X, A, B, xab, enter_price, exit_price,
+                                                    index_X, index_A, index_B,
+                                                    index_buy, index_sell)
+                                        pl = (-exit_price + enter_price) / enter_price
+                                        print('pl1:',pl)
+                                        money1 = money / 2 + pl * money / 2
+                                        print('money1:', money1)
+                                        flag1 = 1
+                                    if df2['low'][date_pointer2] < (
+                                            xab[0][3] - 2 * abs(xab[0][2] - xab[0][3])):
+                                        enter = 0
+                                        flag1 = 0
+                                        index_sell = date_pointer2
+                                        exit_price = (xab[0][3] - 2 * abs(xab[0][2] - xab[0][3]))
+                                        print_trade(df, df2, X, A, B, xab, enter_price, exit_price,
+                                                    index_X, index_A, index_B,
+                                                    index_buy, index_sell)
+                                        money_temp = money
+                                        pl = (-exit_price + enter_price) / enter_price
+                                        print('pl:',pl)
+                                        money = money1 + money / 2 + pl * money / 2
+                                        pl_tot = (money - money_temp) / money_temp
+                                        if pl_tot < 0:  # it will never happen
+                                            num_of_neg_trades += 1
+                                            print('loss:', pl_tot)
+                                        if pl_tot > 0:
+                                            num_of_pos_trades += 1
+                                            print('profit:', pl_tot)
+                                        print('money:', money)
+                                        profit_loss_list.append(pl_tot)
+                                        date_of_trade_list.append(df['timestamp'][date_pointer])
+                                        num_of_neg_trades_list.append(num_of_neg_trades)
+                                        num_of_pos_trades_list.append(num_of_pos_trades)
+                                        money_after_each_trade_list.append(money)
+                                        XAB_del_list.append(xab)
+                                        enter, index_buy, xab_buy, enter_price, XAB_check_list, \
+                                        money_before_each_trade_list, \
+                                        money1 = enter_check_with_cheklist(
+                                            enter, date_pointer, XAB_check_list, money, money1,
+                                            money_before_each_trade_list, index_buy, xab_buy,
+                                            enter_price)
+
+                                else:  # TODO: this can be handled in a function (note:
+                                    # after else)
                                     if XAB_check_list:
                                         XAB_del_list.extend(XAB_check_list)
                                         XAB_check_list = []
                                     stop_loss_trail(df2, date_pointer2, flag, xab)
+
     print(money)
 
     # region
@@ -561,9 +721,9 @@ binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMr
                         api_secret='JjJRJ3bWQTEShF4Eu8ZigY9aEMGPnFNJMH3WoNlOQgxSgrHmLOflIavhMx0KSZFC')
 
 """Data"""
-binance_symbols = ['TRXUSDT']
+binance_symbols = ['LTCUSDT']
 start_date = '1 Jan 2021'
-end_date = '2021-05-29 00:00:00'
+end_date = '2021-03-10 00:00:00'
 data_steps = ['1h']
 leverage = 1
 plot_width = 1500
