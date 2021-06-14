@@ -93,7 +93,7 @@ class MyGeneticAlgorithm():
         n_random = self.population_size - n_keep - n_mutate - n_crossover
         pbar = tqdm(total=self.run_iter)
         # region generate random population
-        population = ][
+        population = []
         iter = 1
         while iter <= self.population_size:
             member = self.generate_random_member()
@@ -177,16 +177,16 @@ class MyGeneticAlgorithm():
         # endregion
         return new_population_score_df[:20]
 
-# ali = {
-#     'fast_window':[3,4,5,6,7,8,9],
-#     'slow_window':[10,20,30,40,50,60],
-#     'sign_window':[130,140,150,160],
-# }
-#
-# def f(X):
-#     return (X[0]+X[1]+X[2])
-#
-# ga = MyGeneticAlgorithm(config=ali,function=f,run_iter=5, population_size=20, n_crossover=3,
-#                         crossover_mode='random')
-# best_params=ga.run()
-# print(best_params)
+ali = {
+    'fast_window':[3,4,5,6,7,8,9],
+    'slow_window':[10,20,30,40,50,60],
+    'sign_window':[130,140,150,160],
+}
+
+def f(X):
+    return (X[0]+X[1]+X[2])
+
+ga = MyGeneticAlgorithm(config=ali,function=f,run_iter=5, population_size=20, n_crossover=3,
+                        crossover_mode='random')
+best_params=ga.run()
+print(best_params)
