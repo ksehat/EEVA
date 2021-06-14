@@ -10,7 +10,7 @@ class MyGeneticAlgorithm():
 
     def __init__(self, config: dict, function, n_crossover: int = None,
                  crossover_mode: str = 'rigid', population_size: int = 100,
-                 run_iter=100, mutation_prob=.5, maximize: bool = True):
+                 run_iter=100, mutation_prob=.8, maximize: bool = True):
         self.config = config
         self.variables_list = [k for k in config]
         self.params_list = [self.config[k] for k in self.config]
@@ -22,11 +22,14 @@ class MyGeneticAlgorithm():
         self.run_iter = run_iter
         self.mutation_prob = mutation_prob
         self.maximize = maximize
+        self.all_populations = pd.DataFrame()
 
     def generate_random_member(self):
         return [random.choice(self.params_list[i]) for i in range(len(self.params_list))]
 
     def evaluate(self, member):
+        if member in self.all_populations['member'].values:
+            return self.all_populations[self.all_populations['member']==member]['score']
         output = self.function(member)
         if not output:
             if self.maximize:
@@ -83,14 +86,14 @@ class MyGeneticAlgorithm():
         member[mutation_point] = random.sample(params_list, k=1)[0]
         return member
 
-    def run(self, keep_frac: float = 10, crossover_frac: float = 10, mutate_frac: float = 15):
+    def run(self, keep_frac: float = 3, crossover_frac: float = 3, mutate_frac: float = 3):
         n_keep = math.floor((keep_frac / 100) * self.population_size)
         n_crossover = math.floor((crossover_frac / 100) * self.population_size)
         n_mutate = math.floor((mutate_frac / 100) * self.population_size)
         n_random = self.population_size - n_keep - n_mutate - n_crossover
         pbar = tqdm(total=self.run_iter)
         # region generate random population
-        population = []
+        population = ][
         iter = 1
         while iter <= self.population_size:
             member = self.generate_random_member()
@@ -109,6 +112,7 @@ class MyGeneticAlgorithm():
             'score': score_list
         })
         population_score_df.sort_values('score', inplace=True, ignore_index=True, ascending=False)
+        self.all_populations = pd.concat([self.all_populations,population_score_df])
         new_population_score_df = pd.DataFrame({'members': [list(np.full(len(self.variables_list),np.nan))] *
                                                            self.population_size,
                                                 'score': list(np.full([self.population_size],
@@ -167,6 +171,7 @@ class MyGeneticAlgorithm():
             new_population_score_df.sort_values(['score'], inplace=True, ignore_index=True,
                                                 ascending=not self.maximize)
             population_score_df = copy.deepcopy(new_population_score_df)
+            self.all_populations = pd.concat([self.all_populations, population_score_df])
             run_iter += 1
             pbar.update(run_iter)
         # endregion
