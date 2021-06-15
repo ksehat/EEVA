@@ -22,14 +22,15 @@ class MyGeneticAlgorithm():
         self.run_iter = run_iter
         self.mutation_prob = mutation_prob
         self.maximize = maximize
-        self.all_populations = pd.DataFrame()
+        self.all_populations = pd.DataFrame(columns=['members','score'])
 
     def generate_random_member(self):
         return [random.choice(self.params_list[i]) for i in range(len(self.params_list))]
 
     def evaluate(self, member):
-        if member in self.all_populations['member'].values:
-            return self.all_populations[self.all_populations['member']==member]['score']
+        if not self.all_populations.empty:
+            if member in self.all_populations['members'].values:
+                return self.all_populations[self.all_populations['member'] == member]['score']
         output = self.function(member)
         if not output:
             if self.maximize:
@@ -112,12 +113,13 @@ class MyGeneticAlgorithm():
             'score': score_list
         })
         population_score_df.sort_values('score', inplace=True, ignore_index=True, ascending=False)
-        self.all_populations = pd.concat([self.all_populations,population_score_df])
-        new_population_score_df = pd.DataFrame({'members': [list(np.full(len(self.variables_list),np.nan))] *
-                                                           self.population_size,
-                                                'score': list(np.full([self.population_size],
-                                                                      np.nan))
-                                                })
+        self.all_populations = copy.deepcopy(population_score_df)
+        new_population_score_df = pd.DataFrame(
+            {'members': [list(np.full(len(self.variables_list), np.nan))] *
+                        self.population_size,
+             'score': list(np.full([self.population_size],
+                                   np.nan))
+             })
         new_population_score_df[:n_keep] = copy.deepcopy(population_score_df[:n_keep])
         # endregion
         # region iter until required score is satisfied
@@ -177,16 +179,19 @@ class MyGeneticAlgorithm():
         # endregion
         return new_population_score_df[:20]
 
-ali = {
-    'fast_window':[3,4,5,6,7,8,9],
-    'slow_window':[10,20,30,40,50,60],
-    'sign_window':[130,140,150,160],
-}
 
-def f(X):
-    return (X[0]+X[1]+X[2])
-
-ga = MyGeneticAlgorithm(config=ali,function=f,run_iter=5, population_size=20, n_crossover=3,
-                        crossover_mode='random')
-best_params=ga.run()
-print(best_params)
+# ali = {
+#     'fast_window': [3, 4, 5, 6, 7, 8, 9],
+#     'slow_window': [10, 20, 30, 40, 50, 60],
+#     'sign_window': [130, 140, 150, 160],
+# }
+#
+#
+# def f(X):
+#     return (X[0] + X[1] + X[2])
+#
+#
+# ga = MyGeneticAlgorithm(config=ali, function=f, run_iter=5, population_size=20, n_crossover=3,
+#                         crossover_mode='random')
+# best_params = ga.run()
+# print(best_params)
