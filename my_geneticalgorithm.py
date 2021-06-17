@@ -22,15 +22,17 @@ class MyGeneticAlgorithm():
         self.run_iter = run_iter
         self.mutation_prob = mutation_prob
         self.maximize = maximize
-        self.all_populations = pd.DataFrame(columns=['members','score'])
+        self.all_populations = pd.DataFrame(columns=['members', 'score'])
 
     def generate_random_member(self):
         return [random.choice(self.params_list[i]) for i in range(len(self.params_list))]
 
     def evaluate(self, member):
         if not self.all_populations.empty:
-            if member in self.all_populations['members'].values:
-                return self.all_populations[self.all_populations['member'] == member]['score']
+            all_populations = list(self.all_populations['members'].values)
+            if member in all_populations:
+                index = all_populations.index(member)
+                return self.all_populations['score'][index]
         output = self.function(member)
         if not output:
             if self.maximize:
@@ -173,7 +175,8 @@ class MyGeneticAlgorithm():
             new_population_score_df.sort_values(['score'], inplace=True, ignore_index=True,
                                                 ascending=not self.maximize)
             population_score_df = copy.deepcopy(new_population_score_df)
-            self.all_populations = pd.concat([self.all_populations, population_score_df])
+            self.all_populations = pd.concat([self.all_populations, population_score_df],
+                                             ignore_index=True)
             run_iter += 1
             pbar.update(run_iter)
         # endregion
