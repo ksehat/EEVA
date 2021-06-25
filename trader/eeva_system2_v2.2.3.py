@@ -289,8 +289,7 @@ def trader(*args):
     ZC_Index = pd.DataFrame({'zcindex': df[df['MACD1_ZC'] == 1].index.values,
                              'timestamp': df.loc[df['MACD1_ZC'] == 1, 'timestamp'],
                              'MACD1_Hist': df.loc[df['MACD1_ZC'] == 1, 'MACD1_Hist']},
-                            columns=['zcindex', 'timestamp', 'MACD1_Hist']).reset_index(
-        drop=True)
+                            columns=['zcindex', 'timestamp', 'MACD1_Hist']).reset_index(drop=True)
     # endregion
     # region XAB Hunter
     # TODO: we have to change the strategy of XAB
@@ -447,7 +446,7 @@ def trader(*args):
                                                     index_buy, index_sell)
                                         money_temp = money
                                         pl = (exit_price - enter_price) / enter_price
-                                        print('pl:',pl)
+                                        print('pl:', pl)
                                         money = money1 + money / 2 + pl * money / 2
                                         pl_tot = (money - money_temp) / money_temp
                                         if pl_tot < 0:
@@ -458,6 +457,11 @@ def trader(*args):
                                             print('profit:', pl_tot)
                                         print('money:', money)
                                         profit_loss_list.append(pl_tot)
+                                        date_of_trade_list.append(df['timestamp'][date_pointer2])
+                                        num_of_neg_trades_list.append(num_of_neg_trades)
+                                        num_of_pos_trades_list.append(num_of_pos_trades)
+                                        money_after_each_trade_list.append(money)
+                                        XAB_del_list.append(xab)
                                         enter, index_buy, xab_buy, enter_price, XAB_check_list, \
                                         money_before_each_trade_list, \
                                         money1 = enter_check_with_cheklist(
@@ -475,7 +479,7 @@ def trader(*args):
                                                     index_X, index_A, index_B,
                                                     index_buy, index_sell)
                                         pl = (exit_price - enter_price) / enter_price
-                                        print('pl1:',pl)
+                                        print('pl1:', pl)
                                         money1 = money / 2 + pl * money / 2
                                         print('money1:', money1)
                                         flag1 = 1
@@ -490,7 +494,7 @@ def trader(*args):
                                                     index_buy, index_sell)
                                         money_temp = money
                                         pl = (exit_price - enter_price) / enter_price
-                                        print('pl:',pl)
+                                        print('pl:', pl)
                                         money = money1 + money / 2 + pl * money / 2
                                         pl_tot = (money - money_temp) / money_temp
                                         if pl_tot < 0:  # it will never happen
@@ -560,7 +564,7 @@ def trader(*args):
                                                     index_buy, index_sell)
                                         money_temp = money
                                         pl = (-exit_price + enter_price) / enter_price
-                                        print('pl:',pl)
+                                        print('pl:', pl)
                                         money = money1 + money / 2 + pl * money / 2
                                         pl_tot = (money - money_temp) / money_temp
                                         if pl_tot < 0:
@@ -571,6 +575,11 @@ def trader(*args):
                                             print('profit:', pl_tot)
                                         print('money:', money)
                                         profit_loss_list.append(pl_tot)
+                                        date_of_trade_list.append(df['timestamp'][date_pointer2])
+                                        num_of_neg_trades_list.append(num_of_neg_trades)
+                                        num_of_pos_trades_list.append(num_of_pos_trades)
+                                        money_after_each_trade_list.append(money)
+                                        XAB_del_list.append(xab)
                                         enter, index_buy, xab_buy, enter_price, XAB_check_list, \
                                         money_before_each_trade_list, \
                                         money1 = enter_check_with_cheklist(
@@ -583,12 +592,12 @@ def trader(*args):
                                         print("sell in 1.618:")
                                         index_sell = date_pointer2
                                         exit_price = (
-                                                    xab[0][3] - 1.618 * abs(xab[0][2] - xab[0][3]))
+                                                xab[0][3] - 1.618 * abs(xab[0][2] - xab[0][3]))
                                         print_trade(df, df2, X, A, B, xab, enter_price, exit_price,
                                                     index_X, index_A, index_B,
                                                     index_buy, index_sell)
                                         pl = (-exit_price + enter_price) / enter_price
-                                        print('pl1:',pl)
+                                        print('pl1:', pl)
                                         money1 = money / 2 + pl * money / 2
                                         print('money1:', money1)
                                         flag1 = 1
@@ -603,7 +612,7 @@ def trader(*args):
                                                     index_buy, index_sell)
                                         money_temp = money
                                         pl = (-exit_price + enter_price) / enter_price
-                                        print('pl:',pl)
+                                        print('pl:', pl)
                                         money = money1 + money / 2 + pl * money / 2
                                         pl_tot = (money - money_temp) / money_temp
                                         if pl_tot < 0:  # it will never happen
