@@ -131,7 +131,7 @@ def data_prep(start_date, symbol, data_step):
           'trades', 'tb_base_av', 'tb_quote_av'])
     data1 = data.astype(float).copy(deep=True)
     data2 = Ichi(data1,9,26,52)
-    data3 = MACD_IND(data2,6,40,8)
+    data3 = MACD_IND(data2,6,30,8)
     df = data3.copy(deep=True)
     df.reset_index(inplace=True)
     return df
@@ -185,8 +185,8 @@ binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120
 batch_size = 750
 binance_client = Client(api_key= '43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMrCl7lZhhJSIM1ijIzS',
                         api_secret= 'JjJRJ3bWQTEShF4Eu8ZigY9aEMGPnFNJMH3WoNlOQgxSgrHmLOflIavhMx0KSZFC')
-binance_symbols = ['LTCUSDT']
-start_date = '19 Mar 2021'
+binance_symbols = ['ETHUSDT']
+start_date = '1 Mar 2021'
 # end_date = '2021-10-01 01:00:00'
 data_steps = ['30m']
 leverage=1
@@ -225,7 +225,11 @@ while True:
                             s.starttls()
                             s.login("luis.figo908908@gmail.com", "vpvumdjlmzxktshi") # "k.sehat.business2021@gmail.com", "ocpnatewbibhdqjh"
                             message = f"Subject: {'New XABC'} \n\nsalam,\n{symbol} {data_step}\n{new_XABC_df.iloc[-1,:]}"
-                            s.sendmail("luis.figo908908@gmail.com", ["kanan.sehat.ks@gmail.com", "amir_elikaee@yahoo.com","saeedtrader94@gmail.com"], message)
+                            s.sendmail("luis.figo908908@gmail.com", ["kanan.sehat.ks@gmail.com",
+                                                                     "amir_elikaee@yahoo.com",
+                                                                     "saeedtrader94@gmail.com",
+                                                                     "cnus.1991@yahoo.com"],
+                                       message)
                             s.quit()
                             XABC_dict[f'XABC_list_old_{symbol}_{data_step}']= XABC_list
                             print(f'email sended for {symbol},{data_step} and new_XABC is {new_XABC_df.iloc[-1,:]}')
