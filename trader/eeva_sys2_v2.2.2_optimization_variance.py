@@ -163,7 +163,7 @@ def xab_reject_decision(df,dp,xab,XAB_del_list,XAB_check_list):
 
 def equal_date_pointer(df1,df2,dp1,dp2,main_data_step):
     dp2_str = df1['timestamp'][dp1]
-    if main_data_step == '1h':
+    if main_data_step == '30m':
         try: dp2 = df2[df2['timestamp'] == dp2_str].index.values[0] + 2
         except IndexError: dp2 = dp2+2
     return dp2
@@ -188,7 +188,7 @@ def trader(x):
                      step=data_step).prepare_data(macd_slow=x[0], macd_fast=x[1],
                                                   macd_sign=x[2])
     df2 = DataHunter(symbol=symbol, start_date=start_date, end_date=end_date,
-                     step='30m').prepare_data(macd_slow=x[0], macd_fast=x[1], macd_sign=x[2])
+                     step='15m').prepare_data(macd_slow=x[0], macd_fast=x[1], macd_sign=x[2])
     ZC_Index = pd.DataFrame({'zcindex': df[df['MACD1_ZC'] == 1].index.values,
                              'timestamp': df.loc[df['MACD1_ZC'] == 1, 'timestamp'],
                              'MACD1_Hist': df.loc[df['MACD1_ZC'] == 1, 'MACD1_Hist']},
@@ -504,22 +504,29 @@ config = {
     'sign_window': [4, 6, 8, 9, 10, 12, 14, 16, 18, 20]
 }
 
-GA = mga(config=config, function=trader, run_iter=20, population_size=100, n_crossover=3,
+GA = mga(config=config, function=trader, run_iter=5, population_size=200, n_crossover=3,
          crossover_mode='random')
 
 coins_datastep_list =[
-    ('LTCUSDT','1h'),
-    ('BTCUSDT','1h'),
-    ('IOTAUSDT','1h'),
-    ('ETHUSDT','1h'),
-    ('TRXUSDT', '1h'),
-    ('NEOUSDT', '1h'),
-    ('LTCUSDT', '30m'),
-    ('BTCUSDT', '30m'),
-    ('IOTAUSDT','30m'),
-    ('ETHUSDT', '30m'),
-    ('TRXUSDT', '30m'),
+    # ('LTCUSDT','1h'),
+    # ('BTCUSDT','1h'),
+    # ('IOTAUSDT','1h'),
+    # ('ETHUSDT','1h'),
+    # ('TRXUSDT', '1h'),
+    # ('NEOUSDT', '1h'),
+    # ('LTCUSDT', '30m'),
+    # ('BTCUSDT', '30m'),
+    # ('IOTAUSDT','30m'),
+    # ('ETHUSDT', '30m'),
+    # ('TRXUSDT', '30m'),
     ('NEOUSDT', '30m'),
+
+    # ('LTCUSDT', '15m'),
+    # ('BTCUSDT', '15m'),
+    # ('IOTAUSDT', '15m'),
+    # ('ETHUSDT', '15m'),
+    # ('TRXUSDT', '15m'),
+    # ('NEOUSDT', '15m'),
 ]
 # region Data
 start_date = '1 Apr 2020'
@@ -528,14 +535,14 @@ leverage = 1
 plot_width = 1500
 plot_height = 1000
 # endregion
-for symbol,data_step in coins_datastep_list:
-    dh = DataHunter(symbol, start_date, end_date, data_step)
-    dh.download_data()
+# for symbol,data_step in coins_datastep_list:
+#     dh = DataHunter(symbol, start_date, end_date, data_step)
+#     dh.download_data()
 
-# for symbol, data_step in coins_datastep_list:
-#     best_params = GA.run()
-#     print(best_params)
-#     best_params.to_csv(f'Genetic-{symbol}-{start_date}-{data_step}.csv', index=True)
+for symbol, data_step in coins_datastep_list:
+    best_params = GA.run()
+    print(best_params)
+    best_params.to_csv(f'Genetic-v2.2.2-{symbol}-{start_date}-{data_step}.csv', index=True)
 #
 #
 # os.system("shutdown /s /t 1")
