@@ -328,8 +328,8 @@ def trader(*args):
                                                 num_of_neg_trades += 1
                                                 print('loss:', loss)
                                                 print('money:', money)
-                                            # # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
-                                            # #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
+                                            # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
+                                            #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
                                             date_of_trade_list.append(df2['timestamp'][
                                                                           date_pointer2])
                                             num_of_neg_trades_list.append(num_of_neg_trades)
@@ -480,9 +480,9 @@ binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMr
                         api_secret='JjJRJ3bWQTEShF4Eu8ZigY9aEMGPnFNJMH3WoNlOQgxSgrHmLOflIavhMx0KSZFC')
 
 """Data"""
-binance_symbols = ['TRXUSDT']
+binance_symbols = ['LTCUSDT']
 start_date = '1 Jan 2021'
-end_date = '2021-02-15 00:00:00'
+end_date = '2021-03-15 00:00:00'
 data_steps = ['1h']
 leverage = 1
 plot_width = 1500
