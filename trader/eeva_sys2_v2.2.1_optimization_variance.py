@@ -18,23 +18,29 @@ from my_geneticalgorithm import MyGeneticAlgorithm as mga
 from data_prep.data_hunter import DataHunter
 import os
 
-def MACD_IND(data,win_slow,win_fast,win_sign):
-    MACD_IND1 = MACD(data['close'],window_slow=win_slow,window_fast=win_fast,window_sign=win_sign)
-    data['MACD']         = MACD_IND1.macd()
-    data['MACD_signal']  = MACD_IND1.macd_signal()
-    data['MACD_Hist']    = MACD_IND1.macd_diff()
-    data['MACD_ZC']      = np.where((data['MACD_Hist']*(data['MACD_Hist'].shift(1,axis=0))) < 0,1,0)
+
+def MACD_IND(data, win_slow, win_fast, win_sign):
+    MACD_IND1 = MACD(data['close'], window_slow=win_slow, window_fast=win_fast,
+                     window_sign=win_sign)
+    data['MACD'] = MACD_IND1.macd()
+    data['MACD_signal'] = MACD_IND1.macd_signal()
+    data['MACD_Hist'] = MACD_IND1.macd_diff()
+    data['MACD_ZC'] = np.where((data['MACD_Hist'] * (data['MACD_Hist'].shift(1, axis=0))) < 0, 1, 0)
     return data
 
-def Ichi(data,win1,win2,win3):
-    Ichimoku_IND1 = IchimokuIndicator(high=data['high'], low=data['low'], window1=win1, window2=win2, window3=win3)
-    data['Ichimoku_a']               = Ichimoku_IND1.ichimoku_a()
-    data['Ichimoku_b']               = Ichimoku_IND1.ichimoku_b()
-    data['Ichimoku_base_line']       = Ichimoku_IND1.ichimoku_base_line()
+
+def Ichi(data, win1, win2, win3):
+    Ichimoku_IND1 = IchimokuIndicator(high=data['high'], low=data['low'], window1=win1,
+                                      window2=win2, window3=win3)
+    data['Ichimoku_a'] = Ichimoku_IND1.ichimoku_a()
+    data['Ichimoku_b'] = Ichimoku_IND1.ichimoku_b()
+    data['Ichimoku_base_line'] = Ichimoku_IND1.ichimoku_base_line()
     data['Ichimoku_conversion_line'] = Ichimoku_IND1.ichimoku_conversion_line()
     return data
 
-def plot_figure(df, index_X, index_A, index_B, index_C, index_buy, index_sell, X, A, B, C, width, height):
+
+def plot_figure(df, index_X, index_A, index_B, index_C, index_buy, index_sell, X, A, B, C, width,
+                height):
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=.05)
     fig.add_trace(go.Candlestick(x=df['timestamp'][index_X - 10:index_sell + 10],
                                  open=df['open'][index_X - 10:index_sell + 10],
@@ -47,8 +53,10 @@ def plot_figure(df, index_X, index_A, index_B, index_C, index_buy, index_sell, X
     fig.add_trace(go.Scatter(x=df['timestamp'][index_X - 10:index_sell + 10],
                              y=df['Ichimoku_conversion_line'][index_X - 10:index_sell + 10]))
     fig.add_trace(go.Scatter(
-        x=[df['timestamp'][index_X], df['timestamp'][index_A], df['timestamp'][index_B], df['timestamp'][index_C]],
-        y=[X, A, B, C], mode='lines+markers', marker=dict(size=[10, 11, 12, 13], color=[0, 1, 2, 3])))
+        x=[df['timestamp'][index_X], df['timestamp'][index_A], df['timestamp'][index_B],
+           df['timestamp'][index_C]],
+        y=[X, A, B, C], mode='lines+markers',
+        marker=dict(size=[10, 11, 12, 13], color=[0, 1, 2, 3])))
     fig.add_shape(type="line",
                   x0=df['timestamp'][index_buy], y0=min(df.loc[index_X:index_sell, 'low']),
                   x1=df['timestamp'][index_buy], y1=max(df.loc[index_X:index_sell, 'high']))
@@ -60,11 +68,16 @@ def plot_figure(df, index_X, index_A, index_B, index_C, index_buy, index_sell, X
     fig.update_layout(height=height, width=width, xaxis_rangeslider_visible=False)
     fig.show()
 
-def macd_phase_change(df,date_pointer):
-    if df['MACD1_Hist'][date_pointer]*df['MACD1_Hist'][date_pointer-1]<0: return True
-    else: return False
 
-def print_trade(df,X,A,B,xab,enter_price,exit_price,index_X,index_A,index_B,index_buy,index_sell):
+def macd_phase_change(df, date_pointer):
+    if df['MACD1_Hist'][date_pointer] * df['MACD1_Hist'][date_pointer - 1] < 0:
+        return True
+    else:
+        return False
+
+
+def print_trade(df, X, A, B, xab, enter_price, exit_price, index_X, index_A, index_B, index_buy,
+                index_sell):
     print(df['timestamp'][index_X], 'X:', X)
     print(df['timestamp'][index_A], 'A:', A)
     print(df['timestamp'][index_B], 'B:', B)
@@ -72,14 +85,17 @@ def print_trade(df,X,A,B,xab,enter_price,exit_price,index_X,index_A,index_B,inde
     print(df['timestamp'][index_buy], 'enter:', enter_price)
     print(df['timestamp'][index_sell], 'enter:', exit_price)
 
+
 def minutes_of_new_data(symbol, kline_size, data, start_date, source):
     if len(data) > 0:
         old = parser.parse(data["timestamp"].iloc[-1])
     elif source == "binance":
         old = datetime.strptime(start_date, '%d %b %Y')
-    if source == "binance": new = pd.to_datetime(binance_client.get_klines(symbol=symbol, interval=kline_size)[-1][0],
-                                                 unit='ms')
+    if source == "binance": new = pd.to_datetime(
+        binance_client.get_klines(symbol=symbol, interval=kline_size)[-1][0],
+        unit='ms')
     return old, new
+
 
 def get_all_binance(symbol, kline_size, start_date='1 Jan 2021', save=False):
     filename = f'{symbol}-{kline_size}-data-from-{start_date}.csv'
@@ -87,18 +103,23 @@ def get_all_binance(symbol, kline_size, start_date='1 Jan 2021', save=False):
         data_df = pd.read_csv(filename)
     else:
         data_df = pd.DataFrame()
-    oldest_point, newest_point = minutes_of_new_data(symbol, kline_size, data_df, start_date, source="binance")
+    oldest_point, newest_point = minutes_of_new_data(symbol, kline_size, data_df, start_date,
+                                                     source="binance")
     delta_min = (newest_point - oldest_point).total_seconds() / 60
     available_data = math.ceil(delta_min / binsizes[kline_size])
     if oldest_point == datetime.strptime(start_date, '%d %b %Y'):
-        print(f'Downloading all available {kline_size} data for {symbol} from {start_date}. Be patient..!')
+        print(
+            f'Downloading all available {kline_size} data for {symbol} from {start_date}. Be patient..!')
     else:
-        print('Downloading %d minutes of new data available for %s, i.e. %d instances of %s data.' % (
-        delta_min, symbol, available_data, kline_size))
-    klines = binance_client.get_historical_klines(symbol, kline_size, oldest_point.strftime("%d %b %Y %H:%M:%S"),
+        print(
+            'Downloading %d minutes of new data available for %s, i.e. %d instances of %s data.' % (
+                delta_min, symbol, available_data, kline_size))
+    klines = binance_client.get_historical_klines(symbol, kline_size,
+                                                  oldest_point.strftime("%d %b %Y %H:%M:%S"),
                                                   newest_point.strftime("%d %b %Y %H:%M:%S"))
     data = pd.DataFrame(klines,
-                        columns=['timestamp', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_av',
+                        columns=['timestamp', 'open', 'high', 'low', 'close', 'volume',
+                                 'close_time', 'quote_av',
                                  'trades', 'tb_base_av', 'tb_quote_av', 'ignore'])
     data['timestamp'] = pd.to_datetime(data['timestamp'], unit='ms')
     if len(data_df) > 0:
@@ -110,6 +131,7 @@ def get_all_binance(symbol, kline_size, start_date='1 Jan 2021', save=False):
     if save: data_df.to_csv(filename)
     print('All caught up..!')
     return data_df
+
 
 def xab_initializer(xab):
     X = xab[0][0]
@@ -123,16 +145,18 @@ def xab_initializer(xab):
     index_4 = xab[1][4]
     flag = xab[2]
     dont_find_C = xab[5]
-    return X,A,B,index_X,index_A,index_B,index_4,flag
+    return X, A, B, index_X, index_A, index_B, index_4, flag
 
-def xab_enter_check(df,date_pointer,xab,enter):
+
+def xab_enter_check(df, date_pointer, xab, enter):
     if xab[2] and df['close'][date_pointer] >= xab[0][2]:
         enter = 1
     if not xab[2] and df['close'][date_pointer] <= xab[0][2]:
         enter = 1
     return enter
 
-def xab_completor(df,date_pointer,xab, XAB_del_list):
+
+def xab_completor(df, date_pointer, xab, XAB_del_list):
     # region Initialize XABC and flag from xabc
     X = xab[0][0]
     A = xab[0][1]
@@ -189,14 +213,15 @@ def xab_completor(df,date_pointer,xab, XAB_del_list):
 
     return xab, XAB_del_list
 
-def xab_reject_decision(df,dp,xab,XAB_del_list,XAB_check_list):
-    if xab[2]==1:
+
+def xab_reject_decision(df, dp, xab, XAB_del_list, XAB_check_list):
+    if xab[2] == 1:
         if df['low'][dp] < xab[0][3]:
             XAB_del_list.append(xab)
         elif df['close'][dp] > xab[0][2]:
             if xab not in XAB_check_list:
                 XAB_check_list.append(xab)
-    if xab[2]==0:
+    if xab[2] == 0:
         if df['high'][dp] > xab[0][3]:
             XAB_del_list.append(xab)
         elif df['close'][dp] < xab[0][2]:
@@ -204,13 +229,15 @@ def xab_reject_decision(df,dp,xab,XAB_del_list,XAB_check_list):
                 XAB_check_list.append(xab)
     return XAB_del_list, XAB_check_list
 
-binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240, "6h": 360, "12h": 720,
+
+binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240,
+            "6h": 360, "12h": 720,
             "1d": 1440}
 batch_size = 750
 
 
 def f(x):
-    print(x,symbol,data_step)
+    print(x, symbol, data_step)
     Profit_Loss_Table_by_Year_Month_for_symbol = pd.DataFrame()
     df = DataHunter(symbol=symbol, start_date=start_date, end_date=end_date,
                     step=data_step).prepare_data(macd_slow=x[0], macd_fast=x[1],
@@ -228,34 +255,48 @@ def f(x):
                 # region XAB Finder
                 X = max(df.iloc[zcindex[0]: ZC_Index.iloc[row_zcindex + 1, 0]]['high'])
                 index_X = df.iloc[zcindex[0]: ZC_Index.iloc[row_zcindex + 1, 0]]['high'].idxmax()
-                A = min(df.iloc[ZC_Index.iloc[row_zcindex + 1, 0]: ZC_Index.iloc[row_zcindex + 2, 0]]['low'])
-                index_A = df.iloc[ZC_Index.iloc[row_zcindex + 1, 0]: ZC_Index.iloc[row_zcindex + 2, 0]][
+                A = min(
+                    df.iloc[ZC_Index.iloc[row_zcindex + 1, 0]: ZC_Index.iloc[row_zcindex + 2, 0]][
+                        'low'])
+                index_A = \
+                df.iloc[ZC_Index.iloc[row_zcindex + 1, 0]: ZC_Index.iloc[row_zcindex + 2, 0]][
                     'low'].idxmin()
-                B = max(df.iloc[ZC_Index.iloc[row_zcindex + 2, 0]: ZC_Index.iloc[row_zcindex + 3, 0]]['high'])
-                index_B = df.iloc[ZC_Index.iloc[row_zcindex + 2, 0]: ZC_Index.iloc[row_zcindex + 3, 0]][
+                B = max(
+                    df.iloc[ZC_Index.iloc[row_zcindex + 2, 0]: ZC_Index.iloc[row_zcindex + 3, 0]][
+                        'high'])
+                index_B = \
+                df.iloc[ZC_Index.iloc[row_zcindex + 2, 0]: ZC_Index.iloc[row_zcindex + 3, 0]][
                     'high'].idxmax()
                 if A < X and B < X and B > A:
                     xab_flag = 1
                     Index_4 = ZC_Index.iloc[row_zcindex + 3, 0]
                     XAB_list.append(
-                        [[X, A, B, None], [index_X, index_A, index_B, None, Index_4], xab_flag, None, None, 0])
+                        [[X, A, B, None], [index_X, index_A, index_B, None, Index_4], xab_flag,
+                         None, None, 0])
                 # endregion
 
             if df['MACD1_Hist'][zcindex[0]] < 0:
                 # region XAB Finder
                 X = min(df.iloc[zcindex[0]: ZC_Index.iloc[row_zcindex + 1, 0]]['low'])
                 index_X = df.iloc[zcindex[0]: ZC_Index.iloc[row_zcindex + 1, 0]]['low'].idxmin()
-                A = max(df.iloc[ZC_Index.iloc[row_zcindex + 1, 0]: ZC_Index.iloc[row_zcindex + 2, 0]]['high'])
-                index_A = df.iloc[ZC_Index.iloc[row_zcindex + 1, 0]: ZC_Index.iloc[row_zcindex + 2, 0]][
+                A = max(
+                    df.iloc[ZC_Index.iloc[row_zcindex + 1, 0]: ZC_Index.iloc[row_zcindex + 2, 0]][
+                        'high'])
+                index_A = \
+                df.iloc[ZC_Index.iloc[row_zcindex + 1, 0]: ZC_Index.iloc[row_zcindex + 2, 0]][
                     'high'].idxmax()
-                B = min(df.iloc[ZC_Index.iloc[row_zcindex + 2, 0]: ZC_Index.iloc[row_zcindex + 3, 0]]['low'])
-                index_B = df.iloc[ZC_Index.iloc[row_zcindex + 2, 0]: ZC_Index.iloc[row_zcindex + 3, 0]][
+                B = min(
+                    df.iloc[ZC_Index.iloc[row_zcindex + 2, 0]: ZC_Index.iloc[row_zcindex + 3, 0]][
+                        'low'])
+                index_B = \
+                df.iloc[ZC_Index.iloc[row_zcindex + 2, 0]: ZC_Index.iloc[row_zcindex + 3, 0]][
                     'low'].idxmin()
                 if A > X and B > X and B < A:
                     xab_flag = 0
                     Index_4 = ZC_Index.iloc[row_zcindex + 3, 0]
                     XAB_list.append(
-                        [[X, A, B, None], [index_X, index_A, index_B, None, Index_4], xab_flag, None, None, 0])
+                        [[X, A, B, None], [index_X, index_A, index_B, None, Index_4], xab_flag,
+                         None, None, 0])
                 # endregion
     # endregion #
 
@@ -282,7 +323,8 @@ def f(x):
     XAB_check_list = []  # This is the list of XABs that may be entered and are valid to enter but right now the system is in trade
     for date_pointer in range(XAB_list[0][1][4], len(df)):
         XAB_valid_list = [x for x in XAB_list if
-                          date_pointer >= x[1][4]]  # This is the list of XABs before the date_pointer
+                          date_pointer >= x[1][
+                              4]]  # This is the list of XABs before the date_pointer
         for idx_xab, xab in enumerate(
                 XAB_valid_list[
                 ::-1]):  # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xab_flag, sl, sudo_sl, dont_find_C]
@@ -300,15 +342,18 @@ def f(x):
                         xab[4] = xab[0][3]  # C is placed in sudo_sl
                         money_before_each_trade_list.append(money)
                     elif xab[0][3] and xab[5]:
-                        XAB_del_list, XAB_check_list = xab_reject_decision(df, date_pointer, xab, XAB_del_list,
+                        XAB_del_list, XAB_check_list = xab_reject_decision(df, date_pointer, xab,
+                                                                           XAB_del_list,
                                                                            XAB_check_list)
 
                 else:  # If it is in trade
                     if xab != xab_buy:
                         xab, XAB_del_list = xab_completor(df, date_pointer, xab, XAB_del_list)
                         if xab[0][3]:
-                            XAB_del_list, XAB_check_list = xab_reject_decision(df, date_pointer, xab,
-                                                                               XAB_del_list, XAB_check_list)
+                            XAB_del_list, XAB_check_list = xab_reject_decision(df, date_pointer,
+                                                                               xab,
+                                                                               XAB_del_list,
+                                                                               XAB_check_list)
                     if xab == xab_buy:
                         if macd_phase_change(df, date_pointer): xab[3] = xab[4]
                         # This is because when the phase is changed, first you need to
@@ -488,7 +533,7 @@ def f(x):
     # print(Profit_Loss_Table_by_Year_Month_for_symbol)
     num_of_months_with_loss = Profit_Loss_Table_by_Year_Month_for_symbol[
         Profit_Loss_Table_by_Year_Month_for_symbol[
-                                                   f'profit & loss_{data_step}']<0].shape[0]
+            f'profit & loss_{data_step}'] < 0].shape[0]
     num_of_months_with_profit = Profit_Loss_Table_by_Year_Month_for_symbol[
         Profit_Loss_Table_by_Year_Month_for_symbol[
             f'profit & loss_{data_step}'] > 0].shape[0]
@@ -499,18 +544,19 @@ def f(x):
             f'profit & loss_{data_step}'] < 0].sum()
 
     money_positive = Profit_Loss_Table_by_Year_Month_for_symbol[
-            f'profit & loss_{data_step}'][
+        f'profit & loss_{data_step}'][
         Profit_Loss_Table_by_Year_Month_for_symbol[
             f'profit & loss_{data_step}'] > 0].sum()
     # print(money_positive,money_negative)
-    if num_of_months_with_loss==0:
-        decision_factor = money_positive*num_of_months_with_profit*1000
+    if num_of_months_with_loss == 0:
+        decision_factor = money_positive * num_of_months_with_profit * 1000
     else:
-        decision_factor = (money_positive/abs(money_negative))*(
-                num_of_months_with_profit/num_of_months_with_loss)
+        decision_factor = (money_positive / abs(money_negative)) * (
+                num_of_months_with_profit / num_of_months_with_loss)
     print(decision_factor)
     print('==========')
     return decision_factor
+
 
 config = {
     'slow_window': [5, 6, 7, 12, 13, 26, 30, 40, 52],
@@ -518,11 +564,11 @@ config = {
     'sign_window': [4, 6, 8, 9, 10, 12, 14, 16, 18, 20]
 }
 
-GA = mga(config=config, function=f, run_iter=3, population_size=200, n_crossover=3,
+GA = mga(config=config, function=f, run_iter=5, population_size=200, n_crossover=3,
          crossover_mode='random')
 
-coins_datastep_list =[
-    ('LTCUSDT','1h'),
+coins_datastep_list = [
+    ('LTCUSDT', '1h'),
     # ('BTCUSDT','1h'),
     # ('IOTAUSDT','1h'),
     # ('ETHUSDT','1h'),
@@ -550,6 +596,5 @@ for symbol, data_step in coins_datastep_list:
     best_params = GA.run()
     print(best_params)
     best_params.to_csv(f'Genetic-v2.2.1-{symbol}-{start_date}-{data_step}.csv', index=True)
-
 
 # os.system("shutdown /s /t 1")
