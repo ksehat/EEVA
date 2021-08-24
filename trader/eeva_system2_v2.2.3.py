@@ -181,10 +181,10 @@ def xab_reject_decision(df, dp, xab, XAB_del_list, XAB_check_list):
 def equal_date_pointer(df1, df2, dp1, dp2, main_data_step):
     dp2_str = df1['timestamp'][dp1]
     if main_data_step == '1h':
-        try:
-            dp2 = df2[df2['timestamp'] == dp2_str].index.values[0] + 2
-        except IndexError:
-            dp2 = dp2 + 2
+        # try:
+        dp2 = df2[df2['timestamp'] == dp2_str].index.values[0] + 2
+        # except IndexError:
+        #     dp2 = dp2 + 2
     return dp2
 
 
@@ -436,6 +436,7 @@ def trader(*args):
                                             enter, date_pointer, XAB_check_list, money, money1,
                                             money_before_each_trade_list, index_buy, xab_buy,
                                             enter_price)
+                                        print('===================')
                                     else:  # if there is something in money1
                                         enter = 0
                                         flag1 = 0
@@ -468,6 +469,8 @@ def trader(*args):
                                             enter, date_pointer, XAB_check_list, money, money1,
                                             money_before_each_trade_list, index_buy, xab_buy,
                                             enter_price)
+                                        print('===================')
+
                                 elif df2['high'][date_pointer2] > (1.618 * abs(xab[0][2] - xab[0][
                                     3]) + xab[0][3]):
                                     if flag1 == 0:
@@ -516,6 +519,8 @@ def trader(*args):
                                             enter, date_pointer, XAB_check_list, money, money1,
                                             money_before_each_trade_list, index_buy, xab_buy,
                                             enter_price)
+                                        print('===================')
+
 
                                 else:  # TODO: this can be handled in a function (note:
                                     # after else)
@@ -554,6 +559,8 @@ def trader(*args):
                                             enter, date_pointer, XAB_check_list, money, money1,
                                             money_before_each_trade_list, index_buy, xab_buy,
                                             enter_price)
+                                        print('===================')
+
                                     else:  # if there is something in money1
                                         enter = 0
                                         flag1 = 0
@@ -586,6 +593,8 @@ def trader(*args):
                                             enter, date_pointer, XAB_check_list, money, money1,
                                             money_before_each_trade_list, index_buy, xab_buy,
                                             enter_price)
+                                        print('===================')
+
                                 elif df2['low'][date_pointer2] < (
                                         xab[0][3] - 1.618 * abs(xab[0][2] - xab[0][3])):
                                     if flag1 == 0:
@@ -634,6 +643,7 @@ def trader(*args):
                                             enter, date_pointer, XAB_check_list, money, money1,
                                             money_before_each_trade_list, index_buy, xab_buy,
                                             enter_price)
+                                        print('===================')
 
                                 else:  # TODO: this can be handled in a function (note:
                                     # after else)
