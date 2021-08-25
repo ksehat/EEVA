@@ -107,7 +107,7 @@ def get_all_binance(symbol, kline_size, start_date='1 Jan 2021', save=False):
         data_df = data
     data_df.set_index('timestamp', inplace=True)
     if save: data_df.to_csv(filename)
-    print('All caught up..!')
+    print(f'All caught up at {datetime.now().astimezone()}!')
     return data_df
 
 
@@ -163,14 +163,14 @@ def XABC_hunter(df):
                     df.iloc[ZC_Index.iloc[row_zcindex + 1, 0]: ZC_Index.iloc[row_zcindex + 2, 0]][
                         'low'])
                 index_A = \
-                df.iloc[ZC_Index.iloc[row_zcindex + 1, 0]: ZC_Index.iloc[row_zcindex + 2, 0]][
-                    'low'].idxmin()
+                    df.iloc[ZC_Index.iloc[row_zcindex + 1, 0]: ZC_Index.iloc[row_zcindex + 2, 0]][
+                        'low'].idxmin()
                 B = max(
                     df.iloc[ZC_Index.iloc[row_zcindex + 2, 0]: ZC_Index.iloc[row_zcindex + 3, 0]][
                         'high'])
                 index_B = \
-                df.iloc[ZC_Index.iloc[row_zcindex + 2, 0]: ZC_Index.iloc[row_zcindex + 3, 0]][
-                    'high'].idxmax()
+                    df.iloc[ZC_Index.iloc[row_zcindex + 2, 0]: ZC_Index.iloc[row_zcindex + 3, 0]][
+                        'high'].idxmax()
                 # C = min( df.iloc[ZC_Index.iloc[row_zcindex+3,0] : ZC_Index.iloc[row_zcindex+4,0]]['low'] )
                 # index_C = df.iloc[ZC_Index.iloc[row_zcindex+3,0] : ZC_Index.iloc[row_zcindex+4,0]]['low'].idxmin()
                 if A < X and B < X and B > A:  # and C<A and C<X:
@@ -188,14 +188,14 @@ def XABC_hunter(df):
                     df.iloc[ZC_Index.iloc[row_zcindex + 1, 0]: ZC_Index.iloc[row_zcindex + 2, 0]][
                         'high'])
                 index_A = \
-                df.iloc[ZC_Index.iloc[row_zcindex + 1, 0]: ZC_Index.iloc[row_zcindex + 2, 0]][
-                    'high'].idxmax()
+                    df.iloc[ZC_Index.iloc[row_zcindex + 1, 0]: ZC_Index.iloc[row_zcindex + 2, 0]][
+                        'high'].idxmax()
                 B = min(
                     df.iloc[ZC_Index.iloc[row_zcindex + 2, 0]: ZC_Index.iloc[row_zcindex + 3, 0]][
                         'low'])
                 index_B = \
-                df.iloc[ZC_Index.iloc[row_zcindex + 2, 0]: ZC_Index.iloc[row_zcindex + 3, 0]][
-                    'low'].idxmin()
+                    df.iloc[ZC_Index.iloc[row_zcindex + 2, 0]: ZC_Index.iloc[row_zcindex + 3, 0]][
+                        'low'].idxmin()
                 # C = max(df.iloc[ZC_Index.iloc[row_zcindex + 3, 0]: ZC_Index.iloc[row_zcindex + 4, 0]]['high'])
                 # index_C = df.iloc[ZC_Index.iloc[row_zcindex + 3, 0]: ZC_Index.iloc[row_zcindex + 4, 0]]['high'].idxmax()
                 if A > X and B > X and B < A:  # and C>A and C>X:
@@ -254,7 +254,7 @@ while True:
                             s.starttls()
                             s.login("luis.figo908908@gmail.com",
                                     "vpvumdjlmzxktshi")  # "k.sehat.business2021@gmail.com", "ocpnatewbibhdqjh"
-                            message = f"Subject: {'New XABC'} \n\nsalam,\n{symbol} {data_step}\n{new_XABC_df.iloc[-1, :]}"
+                            message = f"Subject: {'New XABC'} \n\nsalam,\n{datetime.now().astimezone()} \n{symbol} {data_step}\n{new_XABC_df.iloc[-1, :]}"
                             s.sendmail("luis.figo908908@gmail.com", ["kanan.sehat.ks@gmail.com",
                                                                      "amir_elikaee@yahoo.com",
                                                                      "saeedtrader94@gmail.com",
@@ -263,7 +263,7 @@ while True:
                             s.quit()
                             XABC_dict[f'XABC_list_old_{symbol}_{data_step}'] = XABC_list
                             print(
-                                f'َAt {time.localtime()} email sended for {symbol},{data_step} and new_XABC is'
+                                f'َAt {datetime.now().astimezone()} email sended for {symbol},{data_step} and new_XABC is'
                                 f' {new_XABC_df.iloc[-1, :]}')
                             warning = 0
                             alarm = 1

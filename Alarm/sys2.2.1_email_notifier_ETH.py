@@ -9,11 +9,12 @@ import pandas as pd
 import numpy as np
 from binance.client import Client
 import ta
-from ta.trend import MACD,EMAIndicator,IchimokuIndicator
+from ta.trend import MACD, EMAIndicator, IchimokuIndicator
 from ta.momentum import RSIIndicator as RSI
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import smtplib
+
 
 def MACD_IND(data, win_slow, win_fast, win_sign):
     MACD_IND1 = MACD(data['close'], window_slow=win_slow, window_fast=win_fast,
@@ -91,7 +92,7 @@ def get_all_binance(symbol, kline_size, start_date='1 Jan 2021', save=False):
     else:
         print(
             'Downloading %d minutes of new data available for %s, i.e. %d instances of %s data.' % (
-            delta_min, symbol, available_data, kline_size))
+                delta_min, symbol, available_data, kline_size))
     klines = binance_client.get_historical_klines(symbol, kline_size,
                                                   oldest_point.strftime("%d %b %Y %H:%M:%S"),
                                                   newest_point.strftime("%d %b %Y %H:%M:%S"))
@@ -106,7 +107,7 @@ def get_all_binance(symbol, kline_size, start_date='1 Jan 2021', save=False):
         data_df = data
     data_df.set_index('timestamp', inplace=True)
     if save: data_df.to_csv(filename)
-    print('All caught up..!')
+    print(f'All caught up at {datetime.now().astimezone()}!')
     return data_df
 
 
@@ -123,18 +124,20 @@ def XABC_li2df(XABC_list, df):
     })
     return XABC_df
 
+
 def data_prep(start_date, symbol, data_step):
-    data_org = get_all_binance(symbol, data_step, start_date, save = True)
-    data_org.index = data_org.index.map(lambda x: x if type(x)==str else str(x))
+    data_org = get_all_binance(symbol, data_step, start_date, save=True)
+    data_org.index = data_org.index.map(lambda x: x if type(x) == str else str(x))
     data_org = data_org[~data_org.index.duplicated(keep='last')]
     data = data_org[:-1].filter(['open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_av',
-          'trades', 'tb_base_av', 'tb_quote_av'])
+                                 'trades', 'tb_base_av', 'tb_quote_av'])
     data1 = data.astype(float).copy(deep=True)
-    data2 = Ichi(data1,9,26,52)
-    data3 = MACD_IND(data2,6,30,8)
+    data2 = Ichi(data1, 9, 26, 52)
+    data3 = MACD_IND(data2, 6, 30, 8)
     df = data3.copy(deep=True)
     df.reset_index(inplace=True)
     return df
+
 
 def data_download(start_date, symbol, data_step):
     filename = f'{self.symbol}-{self.step}-data-from-{self.start_date}.csv'
@@ -142,28 +145,30 @@ def data_download(start_date, symbol, data_step):
         data_org = self._get_save_data()
     return df
 
+
 def XABC_hunter(df):
-    ZC_Index = pd.DataFrame( {'zcindex':df[df['MACD_ZC'] == 1].index.values,
-                            'timestamp':df.loc[df['MACD_ZC']==1,'timestamp'],
-                            'MACD_Hist':df.loc[df['MACD_ZC']==1,'MACD_Hist']} ,
-                            columns=['zcindex','timestamp','MACD_Hist']).reset_index(drop=True)
+    ZC_Index = pd.DataFrame({'zcindex': df[df['MACD_ZC'] == 1].index.values,
+                             'timestamp': df.loc[df['MACD_ZC'] == 1, 'timestamp'],
+                             'MACD_Hist': df.loc[df['MACD_ZC'] == 1, 'MACD_Hist']},
+                            columns=['zcindex', 'timestamp', 'MACD_Hist']).reset_index(drop=True)
     # region XABC Hunter
     XABC_list1 = []
-    for row_zcindex,zcindex in ZC_Index.iterrows():
-        if row_zcindex+3 <= len(ZC_Index)-1:
+    for row_zcindex, zcindex in ZC_Index.iterrows():
+        if row_zcindex + 3 <= len(ZC_Index) - 1:
             if df['MACD_Hist'][zcindex[0]] >= 0:
                 # region XABC Finder
-                X = max( df.iloc[ zcindex[0] : ZC_Index.iloc[row_zcindex+1,0] ] ['high'] )
-                index_X = df.iloc[ zcindex[0] : ZC_Index.iloc[row_zcindex+1,0]]['high'].idxmax()
-                A = min( df.iloc[ZC_Index.iloc[row_zcindex+1,0] : ZC_Index.iloc[row_zcindex+2,0]]['low'] )
-                index_A = df.iloc[ZC_Index.iloc[row_zcindex+1,0] : ZC_Index.iloc[row_zcindex+2,0]]['low'].idxmin()
-                B = max( df.iloc[ZC_Index.iloc[row_zcindex+2,0] : ZC_Index.iloc[row_zcindex+3,0]]['high'] )
-                index_B = df.iloc[ZC_Index.iloc[row_zcindex+2,0] : ZC_Index.iloc[row_zcindex+3,0]]['high'].idxmax()
+                X = max(df.iloc[zcindex[0]: ZC_Index.iloc[row_zcindex + 1, 0]]['high'])
+                index_X = df.iloc[zcindex[0]: ZC_Index.iloc[row_zcindex + 1, 0]]['high'].idxmax()
+                A = min(df.iloc[ZC_Index.iloc[row_zcindex + 1, 0]: ZC_Index.iloc[row_zcindex + 2, 0]]['low'])
+                index_A = df.iloc[ZC_Index.iloc[row_zcindex + 1, 0]: ZC_Index.iloc[row_zcindex + 2, 0]]['low'].idxmin()
+                B = max(df.iloc[ZC_Index.iloc[row_zcindex + 2, 0]: ZC_Index.iloc[row_zcindex + 3, 0]]['high'])
+                index_B = df.iloc[ZC_Index.iloc[row_zcindex + 2, 0]: ZC_Index.iloc[row_zcindex + 3, 0]]['high'].idxmax()
                 # C = min( df.iloc[ZC_Index.iloc[row_zcindex+3,0] : ZC_Index.iloc[row_zcindex+4,0]]['low'] )
                 # index_C = df.iloc[ZC_Index.iloc[row_zcindex+3,0] : ZC_Index.iloc[row_zcindex+4,0]]['low'].idxmin()
-                if A<X and B<X and B>A: #and C<A and C<X:
+                if A < X and B < X and B > A:  # and C<A and C<X:
                     xabc_flag = 1
-                    XABC_list1.append([[X,A,B],[index_X,index_A,index_B, ZC_Index.iloc[row_zcindex+3 , 0]],xabc_flag])
+                    XABC_list1.append(
+                        [[X, A, B], [index_X, index_A, index_B, ZC_Index.iloc[row_zcindex + 3, 0]], xabc_flag])
 
                 # endregion
             if df['MACD_Hist'][zcindex[0]] < 0:
@@ -176,20 +181,23 @@ def XABC_hunter(df):
                 index_B = df.iloc[ZC_Index.iloc[row_zcindex + 2, 0]: ZC_Index.iloc[row_zcindex + 3, 0]]['low'].idxmin()
                 # C = max(df.iloc[ZC_Index.iloc[row_zcindex + 3, 0]: ZC_Index.iloc[row_zcindex + 4, 0]]['high'])
                 # index_C = df.iloc[ZC_Index.iloc[row_zcindex + 3, 0]: ZC_Index.iloc[row_zcindex + 4, 0]]['high'].idxmax()
-                if A>X and B>X and B<A:# and C>A and C>X:
+                if A > X and B > X and B < A:  # and C>A and C>X:
                     xabc_flag = 0
-                    XABC_list1.append([[X, A, B], [index_X, index_A, index_B, ZC_Index.iloc[row_zcindex + 3 , 0]], xabc_flag])
+                    XABC_list1.append(
+                        [[X, A, B], [index_X, index_A, index_B, ZC_Index.iloc[row_zcindex + 3, 0]], xabc_flag])
     return XABC_list1
 
-binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240, "6h": 360, "12h": 720, "1d": 1440}
+
+binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240, "6h": 360, "12h": 720,
+            "1d": 1440}
 batch_size = 750
-binance_client = Client(api_key= '43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMrCl7lZhhJSIM1ijIzS',
-                        api_secret= 'JjJRJ3bWQTEShF4Eu8ZigY9aEMGPnFNJMH3WoNlOQgxSgrHmLOflIavhMx0KSZFC')
+binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMrCl7lZhhJSIM1ijIzS',
+                        api_secret='JjJRJ3bWQTEShF4Eu8ZigY9aEMGPnFNJMH3WoNlOQgxSgrHmLOflIavhMx0KSZFC')
 binance_symbols = ['ETHUSDT']
 start_date = '1 Mar 2021'
 # end_date = '2021-10-01 01:00:00'
 data_steps = ['30m']
-leverage=1
+leverage = 1
 plot_width = 1500
 plot_height = 1000
 
@@ -205,36 +213,40 @@ while True:
             XABC_list = XABC_hunter(df)
             XABC_list_old = XABC_dict[f'XABC_list_old_{symbol}_{data_step}']
             new_XABC = [item for item in XABC_list if item not in XABC_list_old]
-            warning=0
-            alarm=0
-            if new_XABC :
+            warning = 0
+            alarm = 0
+            if new_XABC:
                 flag = new_XABC[-1][2]
                 A = new_XABC[-1][0][1]
                 B = new_XABC[-1][0][2]
                 index_B = new_XABC[-1][1][2]
                 index_4 = new_XABC[-1][1][3]
-                for date_pointer in range(index_4,len(df)): # TODO: check it to see until what timestep it goes. we want it live
-                    if alarm==0:
-                        if (flag==0 and df['high'][date_pointer]>=A) or (flag==1 and df['low'][date_pointer]<=A) and warning==0:
+                for date_pointer in range(index_4,
+                                          len(df)):  # TODO: check it to see until what timestep it goes. we want it live
+                    if alarm == 0:
+                        if (flag == 0 and df['high'][date_pointer] >= A) or (
+                                flag == 1 and df['low'][date_pointer] <= A) and warning == 0:
                             index_warning = date_pointer
                             warning = 1
-                        if (flag==0 and df['low'][date_pointer]<=B) or (flag==1 and df['high'][date_pointer]>=B) and warning==1:
-                            new_XABC_df = XABC_li2df(new_XABC,df)
+                        if (flag == 0 and df['low'][date_pointer] <= B) or (
+                                flag == 1 and df['high'][date_pointer] >= B) and warning == 1:
+                            new_XABC_df = XABC_li2df(new_XABC, df)
                             index_alarm = date_pointer
                             s = smtplib.SMTP('smtp.gmail.com', 587)
                             s.starttls()
-                            s.login("luis.figo908908@gmail.com", "vpvumdjlmzxktshi") # "k.sehat.business2021@gmail.com", "ocpnatewbibhdqjh"
-                            message = f"Subject: {'New XABC'} \n\nsalam,\n{symbol} {data_step}\n{new_XABC_df.iloc[-1,:]}"
+                            s.login("luis.figo908908@gmail.com",
+                                    "vpvumdjlmzxktshi")  # "k.sehat.business2021@gmail.com", "ocpnatewbibhdqjh"
+                            message = f"Subject: {'New XABC'} \n\nsalam,\n{datetime.now().astimezone()}\n{symbol} {data_step}\n{new_XABC_df.iloc[-1, :]}"
                             s.sendmail("luis.figo908908@gmail.com", ["kanan.sehat.ks@gmail.com",
                                                                      "amir_elikaee@yahoo.com",
                                                                      "saeedtrader94@gmail.com",
                                                                      "cnus.1991@yahoo.com"],
                                        message)
                             s.quit()
-                            XABC_dict[f'XABC_list_old_{symbol}_{data_step}']= XABC_list
-                            print(f'email sended for {symbol},{data_step} and new_XABC is {new_XABC_df.iloc[-1,:]}')
+                            XABC_dict[f'XABC_list_old_{symbol}_{data_step}'] = XABC_list
+                            print(f'email sended for {symbol},{data_step} and new_XABC is {new_XABC_df.iloc[-1, :]}')
                             warning = 0
-                            alarm=1
+                            alarm = 1
     print('sleeping')
-    time.sleep(60*10)
+    time.sleep(60 * 10)
     pass
