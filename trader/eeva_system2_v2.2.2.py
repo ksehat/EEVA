@@ -15,11 +15,16 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from data_prep.data_hunter import DataHunter
 
-def macd_phase_change(df,date_pointer):
-    if df['MACD1_Hist'][date_pointer]*df['MACD1_Hist'][date_pointer-1]<0: return True
-    else: return False
 
-def print_trade(df,df2,X,A,B,xab,enter_price,exit_price,index_X,index_A,index_B,index_buy,
+def macd_phase_change(df, date_pointer):
+    if df['MACD1_Hist'][date_pointer] * df['MACD1_Hist'][date_pointer - 1] < 0:
+        return True
+    else:
+        return False
+
+
+def print_trade(df, df2, X, A, B, xab, enter_price, exit_price, index_X, index_A, index_B,
+                index_buy,
                 index_sell):
     print(df['timestamp'][index_X], 'X:', X)
     print(df['timestamp'][index_A], 'A:', A)
@@ -28,14 +33,17 @@ def print_trade(df,df2,X,A,B,xab,enter_price,exit_price,index_X,index_A,index_B,
     print(df['timestamp'][index_buy], 'enter:', enter_price)
     print(df2['timestamp'][index_sell], 'exit:', exit_price)
 
+
 def minutes_of_new_data(symbol, kline_size, data, start_date, source):
     if len(data) > 0:
         old = parser.parse(data["timestamp"].iloc[-1])
     elif source == "binance":
         old = datetime.strptime(start_date, '%d %b %Y')
-    if source == "binance": new = pd.to_datetime(binance_client.get_klines(symbol=symbol, interval=kline_size)[-1][0],
-                                                 unit='ms')
+    if source == "binance": new = pd.to_datetime(
+        binance_client.get_klines(symbol=symbol, interval=kline_size)[-1][0],
+        unit='ms')
     return old, new
+
 
 def get_all_binance(symbol, kline_size, start_date='1 Jan 2021', save=False):
     filename = f'{symbol}-{kline_size}-data-from-{start_date}.csv'
@@ -43,18 +51,23 @@ def get_all_binance(symbol, kline_size, start_date='1 Jan 2021', save=False):
         data_df = pd.read_csv(filename)
     else:
         data_df = pd.DataFrame()
-    oldest_point, newest_point = minutes_of_new_data(symbol, kline_size, data_df, start_date, source="binance")
+    oldest_point, newest_point = minutes_of_new_data(symbol, kline_size, data_df, start_date,
+                                                     source="binance")
     delta_min = (newest_point - oldest_point).total_seconds() / 60
     available_data = math.ceil(delta_min / binsizes[kline_size])
     if oldest_point == datetime.strptime(start_date, '%d %b %Y'):
-        print(f'Downloading all available {kline_size} data for {symbol} from {start_date}. Be patient..!')
+        print(
+            f'Downloading all available {kline_size} data for {symbol} from {start_date}. Be patient..!')
     else:
-        print('Downloading %d minutes of new data available for %s, i.e. %d instances of %s data.' % (
-        delta_min, symbol, available_data, kline_size))
-    klines = binance_client.get_historical_klines(symbol, kline_size, oldest_point.strftime("%d %b %Y %H:%M:%S"),
+        print(
+            'Downloading %d minutes of new data available for %s, i.e. %d instances of %s data.' % (
+                delta_min, symbol, available_data, kline_size))
+    klines = binance_client.get_historical_klines(symbol, kline_size,
+                                                  oldest_point.strftime("%d %b %Y %H:%M:%S"),
                                                   newest_point.strftime("%d %b %Y %H:%M:%S"))
     data = pd.DataFrame(klines,
-                        columns=['timestamp', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_av',
+                        columns=['timestamp', 'open', 'high', 'low', 'close', 'volume',
+                                 'close_time', 'quote_av',
                                  'trades', 'tb_base_av', 'tb_quote_av', 'ignore'])
     data['timestamp'] = pd.to_datetime(data['timestamp'], unit='ms')
     if len(data_df) > 0:
@@ -66,6 +79,7 @@ def get_all_binance(symbol, kline_size, start_date='1 Jan 2021', save=False):
     if save: data_df.to_csv(filename)
     print('All caught up..!')
     return data_df
+
 
 def xab_initializer(xab):
     X = xab[0][0]
@@ -79,16 +93,18 @@ def xab_initializer(xab):
     index_4 = xab[1][4]
     flag = xab[2]
     dont_find_C = xab[5]
-    return X,A,B,index_X,index_A,index_B,index_4,flag
+    return X, A, B, index_X, index_A, index_B, index_4, flag
 
-def xab_enter_check(df,date_pointer,xab,enter):
+
+def xab_enter_check(df, date_pointer, xab, enter):
     if xab[2] and df['close'][date_pointer] >= xab[0][2]:
         enter = 1
     if not xab[2] and df['close'][date_pointer] <= xab[0][2]:
         enter = 1
     return enter
 
-def xab_completor(df,date_pointer,xab, XAB_del_list):
+
+def xab_completor(df, date_pointer, xab, XAB_del_list):
     # region Initialize XABC and flag from xabc
     X = xab[0][0]
     A = xab[0][1]
@@ -145,14 +161,15 @@ def xab_completor(df,date_pointer,xab, XAB_del_list):
 
     return xab, XAB_del_list
 
-def xab_reject_decision(df,dp,xab,XAB_del_list,XAB_check_list):
-    if xab[2]==1:
+
+def xab_reject_decision(df, dp, xab, XAB_del_list, XAB_check_list):
+    if xab[2] == 1:
         if df['low'][dp] < xab[0][3]:
             XAB_del_list.append(xab)
         elif df['close'][dp] > xab[0][2]:
             if xab not in XAB_check_list:
                 XAB_check_list.append(xab)
-    if xab[2]==0:
+    if xab[2] == 0:
         if df['high'][dp] > xab[0][3]:
             XAB_del_list.append(xab)
         elif df['close'][dp] < xab[0][2]:
@@ -160,14 +177,18 @@ def xab_reject_decision(df,dp,xab,XAB_del_list,XAB_check_list):
                 XAB_check_list.append(xab)
     return XAB_del_list, XAB_check_list
 
-def equal_date_pointer(df1,df2,dp1,dp2,main_data_step):
+
+def equal_date_pointer(df1, df2, dp1, dp2, main_data_step):
     dp2_str = df1['timestamp'][dp1]
-    if main_data_step == '1h':
-        try: dp2 = df2[df2['timestamp'] == dp2_str].index.values[0] + 2
-        except IndexError: dp2 = dp2+2
+    if main_data_step == main_data_step:
+        try:
+            dp2 = df2[df2['timestamp'] == dp2_str].index.values[0] + 2
+        except IndexError:
+            dp2 = dp2 + 2
     return dp2
 
-def stop_loss_trail(df,date_pointer,flag,xab):
+
+def stop_loss_trail(df, date_pointer, flag, xab):
     if flag == 1:
         if df['MACD1_Hist'][date_pointer] < 0:
             if macd_phase_change(df, date_pointer) or df['low'][date_pointer] <= xab[4]:
@@ -179,17 +200,19 @@ def stop_loss_trail(df,date_pointer,flag,xab):
                 xab[4] = df['high'][date_pointer]
         if df['MACD1_Hist'][date_pointer] < 0: xab[3] = xab[4]
 
+
 def trader(*args):
     # print(args[0],args[1],args[2])
     for symbol_row, symbol in enumerate(binance_symbols):
         Profit_Loss_Table_by_Year_Month_for_symbol = pd.DataFrame()
         for data_step in data_steps:
             # region Data Preparation
-            df  = DataHunter(symbol=symbol, start_date=start_date, end_date=end_date,
-                             step=data_step).prepare_data(macd_slow=args[0], macd_fast=args[1],
-                                                          macd_sign=args[2])
+            df = DataHunter(symbol=symbol, start_date=start_date, end_date=end_date,
+                            step=data_step).prepare_data(macd_slow=args[0], macd_fast=args[1],
+                                                         macd_sign=args[2])
             df2 = DataHunter(symbol=symbol, start_date=start_date, end_date=end_date,
-                             step='30m').prepare_data(macd_slow=args[0], macd_fast=args[1], macd_sign=args[2])
+                             step='15m').prepare_data(macd_slow=args[0], macd_fast=args[1],
+                                                      macd_sign=args[2])
             ZC_Index = pd.DataFrame({'zcindex': df[df['MACD1_ZC'] == 1].index.values,
                                      'timestamp': df.loc[df['MACD1_ZC'] == 1, 'timestamp'],
                                      'MACD1_Hist': df.loc[df['MACD1_ZC'] == 1, 'MACD1_Hist']},
@@ -267,10 +290,13 @@ def trader(*args):
             XAB_del_list = []  # This the list of XABs that are rejected
             XAB_check_list = []  # This is the list of XABs that may be entered and are valid to enter but right now the system is in trade
             date_pointer2 = 0
-            for date_pointer in range(XAB_list[0][1][4],len(df)):
-                date_pointer22 = equal_date_pointer(df, df2, date_pointer, date_pointer2, data_step)
-                XAB_valid_list = [x for x in XAB_list if date_pointer >= x[1][4]]  # This is the list of XABs before the date_pointer
-                for idx_xab, xab in enumerate(XAB_valid_list[::-1]):  # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xab_flag, sl, sudo_sl, dont_find_C]
+            for date_pointer in range(XAB_list[0][1][4], len(df)):
+                date_pointer22 = equal_date_pointer(df, df2, date_pointer, date_pointer2,
+                                                    data_step)
+                XAB_valid_list = [x for x in XAB_list if date_pointer >= x[1][
+                    4]]  # This is the list of XABs before the date_pointer
+                for idx_xab, xab in enumerate(XAB_valid_list[
+                                              ::-1]):  # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xab_flag, sl, sudo_sl, dont_find_C]
                     if xab not in XAB_del_list:
                         X, A, B, index_X, index_A, index_B, index_4, flag = xab_initializer(xab)
                         if enter == 0:
@@ -290,7 +316,7 @@ def trader(*args):
                                                                                    XAB_del_list,
                                                                                    XAB_check_list)
 
-                        else:  # If it is in trade
+                        if enter==1:  # If it is in trade
                             if xab != xab_buy:
                                 xab, XAB_del_list = xab_completor(df, date_pointer, xab,
                                                                   XAB_del_list)
@@ -302,7 +328,7 @@ def trader(*args):
                                                                                        XAB_check_list)
                             if xab == xab_buy:
                                 for date_pointer2 in [date_pointer22, date_pointer22 + 1]:
-                                    if enter==0 or date_pointer2>len(df2)-1: break
+                                    if enter == 0 or date_pointer2 > len(df2) - 1: break
                                     if macd_phase_change(df2, date_pointer2): xab[3] = xab[4]
                                     # This is because when the phase is changed, first you need to
                                     # replace the sl with sudo_sl
@@ -311,11 +337,13 @@ def trader(*args):
                                             enter = 0
                                             index_sell = date_pointer2
                                             exit_price = xab[3]
-                                            print_trade(df, df2, X, A, B, xab, enter_price, exit_price,
+                                            print_trade(df, df2, X, A, B, xab, enter_price,
+                                                        exit_price,
                                                         index_X, index_A, index_B,
                                                         index_buy, index_sell)
                                             if exit_price > B:
-                                                profit = leverage * ((exit_price - B) / B) - trade_fee
+                                                profit = leverage * (
+                                                        (exit_price - B) / B) - trade_fee
                                                 money = money + profit * money
                                                 profit_loss_list.append(profit)
                                                 num_of_pos_trades += 1
@@ -348,7 +376,7 @@ def trader(*args):
                                             if XAB_check_list:
                                                 XAB_del_list.extend(XAB_check_list)
                                                 XAB_check_list = []
-                                            stop_loss_trail(df2,date_pointer2,flag,xab)
+                                            stop_loss_trail(df2, date_pointer2, flag, xab)
 
                                     if flag == 0:
                                         if df2['high'][date_pointer2] > xab[3]:
@@ -356,11 +384,12 @@ def trader(*args):
                                             index_sell = date_pointer2
                                             exit_price = xab[3]
                                             print_trade(df, df2, X, A, B, xab, enter_price, \
-                                                               exit_price,
+                                                        exit_price,
                                                         index_X, index_A, index_B,
                                                         index_buy, index_sell)
                                             if exit_price < B:
-                                                profit = leverage * ((B - exit_price) / B) - trade_fee
+                                                profit = leverage * (
+                                                        (B - exit_price) / B) - trade_fee
                                                 money = money + profit * money
                                                 profit_loss_list.append(profit)
                                                 num_of_pos_trades += 1
@@ -392,7 +421,7 @@ def trader(*args):
                                             if XAB_check_list:
                                                 XAB_del_list.extend(XAB_check_list)
                                                 XAB_check_list = []
-                                            stop_loss_trail(df2,date_pointer2,flag,xab)
+                                            stop_loss_trail(df2, date_pointer2, flag, xab)
             print(money)
 
             # region
@@ -473,23 +502,24 @@ def trader(*args):
                                                           f'{data_steps}-{args}-{money}.csv',
                                                           index=True)
 
-binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120,  "4h": 240,
+
+binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240,
             "6h": 360, "12h": 720, "1d": 1440}
 batch_size = 750
 binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMrCl7lZhhJSIM1ijIzS',
                         api_secret='JjJRJ3bWQTEShF4Eu8ZigY9aEMGPnFNJMH3WoNlOQgxSgrHmLOflIavhMx0KSZFC')
 
 """Data"""
-binance_symbols = ['LTCUSDT']
+binance_symbols = ['ETHUSDT']
 start_date = '1 Jan 2021'
-end_date = '2021-03-15 00:00:00'
-data_steps = ['1h']
+end_date = '2021-09-15 00:00:00'
+data_steps = ['30m']
 leverage = 1
 plot_width = 1500
 plot_height = 1000
 macd_list = [
-[26, 12, 9],
-             ]
+    [6, 30, 8],
+]
 
 for macd_value in macd_list:
     trader(*macd_value)
