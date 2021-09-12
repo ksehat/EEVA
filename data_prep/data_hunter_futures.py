@@ -42,7 +42,7 @@ class DataHunterFutures():
 
     def _get_save_data(self, save=True):
         binance_client = Client(api_key=self.api_key, api_secret=self.api_secret)
-        filename = f'{self.symbol}-{self.step}-data-from-{self.start_date}.csv'
+        filename = f'Futures-{self.symbol}-{self.step}-data-from-{self.start_date}.csv'
         if os.path.isfile(filename):
             data_df = pd.read_csv(filename)
         else:
@@ -74,7 +74,7 @@ class DataHunterFutures():
         return data_df
 
     def prepare_data(self, macd_slow=6, macd_fast=24, macd_sign=12, macd2_slow=6, macd2_fast=24, macd2_sign=12):
-        filename = f'{self.symbol}-{self.step}-data-from-{self.start_date}.csv'
+        filename = f'Futures-{self.symbol}-{self.step}-data-from-{self.start_date}.csv'
         if os.path.isfile(filename):
             data_org = pd.read_csv(filename, index_col=0)
         else: data_org = self._get_save_data()
@@ -111,7 +111,7 @@ class DataHunterFutures():
 
 
 
-# a = DataHunter(symbol='BTCUSDT',start_date='1 Jan 2021', end_date='2021-09-25 00:00:00',
-#                step='1h').prepare_data()
-# print(a.iloc[-1,:])
+a = DataHunterFutures(symbol='BTCUSDT',start_date='1 Jan 2021', end_date='2021-09-25 00:00:00',
+               step='1h').prepare_data()
+print(a.iloc[-1,:])
 
