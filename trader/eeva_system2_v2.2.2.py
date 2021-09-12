@@ -180,11 +180,13 @@ def xab_reject_decision(df, dp, xab, XAB_del_list, XAB_check_list):
 
 def equal_date_pointer(df1, df2, dp1, dp2, main_data_step):
     dp2_str = df1['timestamp'][dp1]
-    if main_data_step == main_data_step:
-        try:
-            dp2 = df2[df2['timestamp'] == dp2_str].index.values[0] + 2
-        except IndexError:
-            dp2 = dp2 + 2
+    # if main_data_step == main_data_step:
+    try:
+        dp2 = df2[df2['timestamp'] == dp2_str].index.values[0] + 2
+    except IndexError:
+        print(f"there occurs an error in {df1['timestamp'][dp1]}") #This is for debug of
+        # dataframes
+        dp2 = dp2 + 2
     return dp2
 
 
