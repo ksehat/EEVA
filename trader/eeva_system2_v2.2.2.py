@@ -508,20 +508,39 @@ def trader(*args):
 binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240,
             "6h": 360, "12h": 720, "1d": 1440}
 batch_size = 750
-binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMrCl7lZhhJSIM1ijIzS',
-                        api_secret='JjJRJ3bWQTEShF4Eu8ZigY9aEMGPnFNJMH3WoNlOQgxSgrHmLOflIavhMx0KSZFC')
 
-"""Data"""
-binance_symbols = ['ETHUSDT']
-start_date = '1 Jan 2021'
-end_date = '2021-09-15 00:00:00'
-data_steps = ['30m']
-leverage = 1
-plot_width = 1500
-plot_height = 1000
-macd_list = [
-    [6, 30, 8],
-]
+run_mode = 1
+file_includes = 'v2.2.2'
+if run_mode == 1:
+    """Data"""
+    binance_symbols = ['LTCUSDT']
+    start_date = '1 Jan 2018'
+    end_date = '2021-04-15 00:00:00'
+    data_steps = ['30m']
+    leverage = 1
+    plot_width = 1500
+    plot_height = 1000
+    macd_list = [
+        [6, 48, 18]
+    ]
+    for macd_value in macd_list:
+        trader(*macd_value)
 
-for macd_value in macd_list:
-    trader(*macd_value)
+else:
+    # NOTE: if you want to give the macd_list manually, please change this part.
+    os.chdir('D:/Python projects/EEVA/trader/Gentic results/Sys2.2.2/')
+    csv_files = os.listdir()
+    this_sys_related_csv_files = [x for x in csv_files if file_includes in x]
+
+    for f in this_sys_related_csv_files:
+        df_csv = pd.read_csv(f)
+        macd_list = [ast.literal_eval(x) for x in df_csv['members'].tolist()]
+        file_name_list = f.split('-')
+        binance_symbols = [file_name_list[3]]
+        start_date = '1 Mar 2018'
+        end_date = '2021-04-15 00:00:00'
+        data_steps = [file_name_list[-1].split('.')[0]]
+        leverage = 1
+
+        for macd_value in macd_list:
+            trader(*macd_value)
