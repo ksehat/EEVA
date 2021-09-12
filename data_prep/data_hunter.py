@@ -56,6 +56,7 @@ class DataHunter():
         else:
             print('Downloading %d minutes of new data available for %s, i.e. %d instances of %s data.' % (
             delta_min, self.symbol, available_data, self.step))
+        datetime.utcnow()
         klines = binance_client.get_historical_klines(self.symbol, self.step,
                                                       oldest_point.strftime("%d %b %Y %H:%M:%S"),
                                                       newest_point.strftime("%d %b %Y %H:%M:%S"))
@@ -112,5 +113,6 @@ class DataHunter():
 
 
 # a = DataHunter(symbol='BTCUSDT',start_date='1 Jan 2021', end_date='2021-03-25 00:00:00', step='1h').prepare_data()
-# print(a.columns)
+# print(a.iloc[-1,:])
+
 
