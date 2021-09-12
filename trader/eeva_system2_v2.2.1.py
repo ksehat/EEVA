@@ -546,7 +546,8 @@ binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120
             "6h": 360, "12h": 720, "1d": 1440}
 batch_size = 750
 
-run_mode=1
+run_mode=0
+file_includes = 'v2.2.1'
 if run_mode==1:
     """Data"""
     binance_symbols = ['ETHUSDT']
@@ -567,7 +568,7 @@ else:
     os.chdir('D:/Python projects/EEVA/trader/Gentic results/Sys2.2.1 and Sys2.2.2 for maximum '
              'money/processing files')
     csv_files = os.listdir()
-    this_sys_related_csv_files = [x for x in csv_files if 'v2.2.1' in x]
+    this_sys_related_csv_files = [x for x in csv_files if file_includes in x]
 
     for f in this_sys_related_csv_files:
         df_csv = pd.read_csv(f)
