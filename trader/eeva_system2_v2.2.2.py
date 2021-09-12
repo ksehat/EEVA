@@ -1,6 +1,7 @@
 # This system uses trailing stop loss with lower time step
 import pandas as pd
 import math
+import ast
 import os.path
 import time
 import ta
@@ -293,8 +294,7 @@ def trader(*args):
             XAB_check_list = []  # This is the list of XABs that may be entered and are valid to enter but right now the system is in trade
             date_pointer2 = 0
             for date_pointer in range(XAB_list[0][1][4], len(df)):
-                date_pointer22 = equal_date_pointer(df, df2, date_pointer, date_pointer2,
-                                                    data_step)
+                date_pointer22 = equal_date_pointer(df, df2, date_pointer, date_pointer2, data_step)
                 XAB_valid_list = [x for x in XAB_list if date_pointer >= x[1][
                     4]]  # This is the list of XABs before the date_pointer
                 for idx_xab, xab in enumerate(XAB_valid_list[
@@ -318,7 +318,7 @@ def trader(*args):
                                                                                    XAB_del_list,
                                                                                    XAB_check_list)
 
-                        if enter==1:  # If it is in trade
+                        if enter == 1:  # If it is in trade
                             if xab != xab_buy:
                                 xab, XAB_del_list = xab_completor(df, date_pointer, xab,
                                                                   XAB_del_list)
@@ -339,25 +339,25 @@ def trader(*args):
                                             enter = 0
                                             index_sell = date_pointer2
                                             exit_price = xab[3]
-                                            print_trade(df, df2, X, A, B, xab, enter_price,
-                                                        exit_price,
-                                                        index_X, index_A, index_B,
-                                                        index_buy, index_sell)
+                                            # print_trade(df, df2, X, A, B, xab, enter_price,
+                                            #             exit_price,
+                                            #             index_X, index_A, index_B,
+                                            #             index_buy, index_sell)
                                             if exit_price > B:
                                                 profit = leverage * (
                                                         (exit_price - B) / B) - trade_fee
                                                 money = money + profit * money
                                                 profit_loss_list.append(profit)
                                                 num_of_pos_trades += 1
-                                                print('profit:', profit)
-                                                print('money:', money)
+                                                # print('profit:', profit)
+                                                # print('money:', money)
                                             if exit_price <= B:
                                                 loss = leverage * ((exit_price - B) / B) - trade_fee
                                                 money = money + loss * money
                                                 profit_loss_list.append(loss)
                                                 num_of_neg_trades += 1
-                                                print('loss:', loss)
-                                                print('money:', money)
+                                                # print('loss:', loss)
+                                                # print('money:', money)
                                             # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
                                             #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
                                             date_of_trade_list.append(df2['timestamp'][
@@ -385,25 +385,25 @@ def trader(*args):
                                             enter = 0
                                             index_sell = date_pointer2
                                             exit_price = xab[3]
-                                            print_trade(df, df2, X, A, B, xab, enter_price, \
-                                                        exit_price,
-                                                        index_X, index_A, index_B,
-                                                        index_buy, index_sell)
+                                            # print_trade(df, df2, X, A, B, xab, enter_price, \
+                                            #             exit_price,
+                                            #             index_X, index_A, index_B,
+                                            #             index_buy, index_sell)
                                             if exit_price < B:
                                                 profit = leverage * (
                                                         (B - exit_price) / B) - trade_fee
                                                 money = money + profit * money
                                                 profit_loss_list.append(profit)
                                                 num_of_pos_trades += 1
-                                                print('profit:', profit)
-                                                print('money:', money)
+                                                # print('profit:', profit)
+                                                # print('money:', money)
                                             if exit_price >= B:
                                                 loss = leverage * ((B - exit_price) / B) - trade_fee
                                                 money = money + loss * money
                                                 profit_loss_list.append(loss)
                                                 num_of_neg_trades += 1
-                                                print('loss:', loss)
-                                                print('money:', money)
+                                                # print('loss:', loss)
+                                                # print('money:', money)
                                             # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
                                             #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
                                             date_of_trade_list.append(df2['timestamp'][
