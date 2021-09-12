@@ -180,11 +180,11 @@ def xab_reject_decision(df, dp, xab, XAB_del_list, XAB_check_list):
 
 def equal_date_pointer(df1, df2, dp1, dp2, main_data_step):
     dp2_str = df1['timestamp'][dp1]
-    if main_data_step == '1h':
-        # try:
+    # if main_data_step == '1h':
+    try:
         dp2 = df2[df2['timestamp'] == dp2_str].index.values[0] + 2
-        # except IndexError:
-        #     dp2 = dp2 + 2
+    except IndexError:
+        dp2 = dp2 + 2
     return dp2
 
 
@@ -389,7 +389,7 @@ def trader(*args):
                                                                            XAB_del_list,
                                                                            XAB_check_list)
 
-                else:  # If it is in trade
+                if enter == 1:  # If it is in trade
                     if xab != xab_buy:
                         xab, XAB_del_list = xab_completor(df, date_pointer, xab,
                                                           XAB_del_list)
