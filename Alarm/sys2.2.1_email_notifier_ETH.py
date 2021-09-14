@@ -133,7 +133,7 @@ def data_prep(start_date, symbol, data_step):
                                  'trades', 'tb_base_av', 'tb_quote_av'])
     data1 = data.astype(float).copy(deep=True)
     data2 = Ichi(data1, 9, 26, 52)
-    data3 = MACD_IND(data2, 6, 30, 8)
+    data3 = MACD_IND(data2, 5, 48, 4)
     df = data3.copy(deep=True)
     df.reset_index(inplace=True)
     return df
@@ -240,7 +240,8 @@ while True:
                             s.sendmail("luis.figo908908@gmail.com", ["kanan.sehat.ks@gmail.com",
                                                                      "amir_elikaee@yahoo.com",
                                                                      "saeedtrader94@gmail.com",
-                                                                     "cnus.1991@yahoo.com"],
+                                                                     "cnus.1991@yahoo.com",
+                                                                     "mohammad.mehmanchi@gmail.com"],
                                        message)
                             s.quit()
                             XABC_dict[f'XABC_list_old_{symbol}_{data_step}'] = XABC_list
