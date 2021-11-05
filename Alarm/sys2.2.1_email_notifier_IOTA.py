@@ -133,7 +133,7 @@ def data_prep(start_date, symbol, data_step):
                                  'trades', 'tb_base_av', 'tb_quote_av'])
     data1 = data.astype(float).copy(deep=True)
     data2 = Ichi(data1, 9, 26, 52)
-    data3 = MACD_IND(data2, 5, 48, 10)
+    data3 = MACD_IND(data2, 5, 48, 6)
     df = data3.copy(deep=True)
     df.reset_index(inplace=True)
     return df
@@ -211,7 +211,7 @@ binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120
 batch_size = 750
 binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMrCl7lZhhJSIM1ijIzS',
                         api_secret='JjJRJ3bWQTEShF4Eu8ZigY9aEMGPnFNJMH3WoNlOQgxSgrHmLOflIavhMx0KSZFC')
-binance_symbols = ['LTCUSDT']
+binance_symbols = ['IOTAUSDT']
 start_date = '19 Mar 2021'
 # end_date = '2021-10-01 01:00:00'
 data_steps = ['30m']

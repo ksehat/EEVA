@@ -207,47 +207,54 @@ for symbol in binance_symbols:
         XABC_dict[f'XABC_list_old_{symbol}_{data_step}'] = []
 
 while True:
-    for symbol in binance_symbols:
-        for data_step in data_steps:
-            df = data_prep(start_date, symbol, data_step)
-            XABC_list = XABC_hunter(df)
-            XABC_list_old = XABC_dict[f'XABC_list_old_{symbol}_{data_step}']
-            new_XABC = [item for item in XABC_list if item not in XABC_list_old]
-            warning = 0
-            alarm = 0
-            if new_XABC:
-                flag = new_XABC[-1][2]
-                A = new_XABC[-1][0][1]
-                B = new_XABC[-1][0][2]
-                index_B = new_XABC[-1][1][2]
-                index_4 = new_XABC[-1][1][3]
-                for date_pointer in range(index_4,
-                                          len(df)):  # TODO: check it to see until what timestep it goes. we want it live
-                    if alarm == 0:
-                        if (flag == 0 and df['high'][date_pointer] >= A) or (
-                                flag == 1 and df['low'][date_pointer] <= A) and warning == 0:
-                            index_warning = date_pointer
-                            warning = 1
-                        if (flag == 0 and df['low'][date_pointer] <= B) or (
-                                flag == 1 and df['high'][date_pointer] >= B) and warning == 1:
-                            new_XABC_df = XABC_li2df(new_XABC, df)
-                            index_alarm = date_pointer
-                            s = smtplib.SMTP('smtp.gmail.com', 587)
-                            s.starttls()
-                            s.login("luis.figo908908@gmail.com",
-                                    "vpvumdjlmzxktshi")  # "k.sehat.business2021@gmail.com", "ocpnatewbibhdqjh"
-                            message = f"Subject: {'New XABC'} \n\nsalam,\n{datetime.now().astimezone()}\n{symbol} {data_step}\n{new_XABC_df.iloc[-1, :]}"
-                            s.sendmail("luis.figo908908@gmail.com", ["kanan.sehat.ks@gmail.com",
-                                                                     "amir_elikaee@yahoo.com",
-                                                                     "saeedtrader94@gmail.com",
-                                                                     "cnus.1991@yahoo.com",
-                                                                     "mohammad.mehmanchi@gmail.com"],
-                                       message)
-                            s.quit()
-                            XABC_dict[f'XABC_list_old_{symbol}_{data_step}'] = XABC_list
-                            print(f'email sended for {symbol},{data_step} and new_XABC is {new_XABC_df.iloc[-1, :]}')
-                            warning = 0
-                            alarm = 1
-    print('sleeping')
-    time.sleep(60 * 10)
-    pass
+    try:
+        for symbol in binance_symbols:
+            for data_step in data_steps:
+                df = data_prep(start_date, symbol, data_step)
+                XABC_list = XABC_hunter(df)
+                XABC_list_old = XABC_dict[f'XABC_list_old_{symbol}_{data_step}']
+                new_XABC = [item for item in XABC_list if item not in XABC_list_old]
+                warning = 0
+                alarm = 0
+                if new_XABC:
+                    flag = new_XABC[-1][2]
+                    A = new_XABC[-1][0][1]
+                    B = new_XABC[-1][0][2]
+                    index_B = new_XABC[-1][1][2]
+                    index_4 = new_XABC[-1][1][3]
+                    for date_pointer in range(index_4,
+                                              len(df)):  # TODO: check it to see until what timestep it goes. we want it live
+                        if alarm == 0:
+                            if (flag == 0 and df['high'][date_pointer] >= A) or (
+                                    flag == 1 and df['low'][date_pointer] <= A) and warning == 0:
+                                index_warning = date_pointer
+                                warning = 1
+                            if (flag == 0 and df['low'][date_pointer] <= B) or (
+                                    flag == 1 and df['high'][date_pointer] >= B) and warning == 1:
+                                new_XABC_df = XABC_li2df(new_XABC, df)
+                                index_alarm = date_pointer
+                                s = smtplib.SMTP('smtp.gmail.com', 587)
+                                s.starttls()
+                                s.login("luis.figo908908@gmail.com",
+                                        "vpvumdjlmzxktshi")  # "k.sehat.business2021@gmail.com", "ocpnatewbibhdqjh"
+                                message = f"Subject: {'New XABC'} \n\nsalam,\n{datetime.now().astimezone()}\n{symbol} {data_step}\n{new_XABC_df.iloc[-1, :]}"
+                                s.sendmail("luis.figo908908@gmail.com", ["kanan.sehat.ks@gmail.com",
+                                                                         "amir_elikaee@yahoo.com",
+                                                                         "saeedtrader94@gmail.com",
+                                                                         "cnus.1991@yahoo.com",
+                                                                         "mohammad.mehmanchi@gmail.com",
+                                                                         "sarah.arab@protonmail.com",
+                                                                         "sephedoo@gmail.com"
+                                                                         ],
+                                           message)
+                                s.quit()
+                                XABC_dict[f'XABC_list_old_{symbol}_{data_step}'] = XABC_list
+                                print(f'email sended for {symbol},{data_step} and new_XABC is {new_XABC_df.iloc[-1, :]}')
+                                warning = 0
+                                alarm = 1
+        print('sleeping')
+        time.sleep(60 * 10)
+        pass
+    except:
+        print
+        pass

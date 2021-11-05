@@ -36,36 +36,6 @@ def Ichi(data, win1, win2, win3):
     return data
 
 
-def plot_figure(df, index_X, index_A, index_B, index_C, index_buy, index_sell, X, A, B, C, width,
-                height):
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=.05)
-    fig.add_trace(go.Candlestick(x=df['timestamp'][index_X - 10:index_sell + 10],
-                                 open=df['open'][index_X - 10:index_sell + 10],
-                                 high=df['high'][index_X - 10:index_sell + 10],
-                                 low=df['low'][index_X - 10:index_sell + 10],
-                                 close=df['close'][index_X - 10:index_sell + 10]))
-
-    fig.add_trace(go.Scatter(x=df['timestamp'][index_X - 10:index_sell + 10],
-                             y=df['Ichimoku_base_line'][index_X - 10:index_sell + 10]))
-    fig.add_trace(go.Scatter(x=df['timestamp'][index_X - 10:index_sell + 10],
-                             y=df['Ichimoku_conversion_line'][index_X - 10:index_sell + 10]))
-    fig.add_trace(go.Scatter(
-        x=[df['timestamp'][index_X], df['timestamp'][index_A], df['timestamp'][index_B],
-           df['timestamp'][index_C]],
-        y=[X, A, B, C], mode='lines+markers',
-        marker=dict(size=[10, 11, 12, 13], color=[0, 1, 2, 3])))
-    fig.add_shape(type="line",
-                  x0=df['timestamp'][index_buy], y0=min(df.loc[index_X:index_sell, 'low']),
-                  x1=df['timestamp'][index_buy], y1=max(df.loc[index_X:index_sell, 'high']))
-    fig.add_shape(type="line",
-                  x0=df['timestamp'][index_sell], y0=min(df.loc[index_X:index_sell, 'low']),
-                  x1=df['timestamp'][index_sell], y1=max(df.loc[index_X:index_sell, 'high']))
-    fig.add_trace(go.Bar(x=df['timestamp'][index_X - 10:index_sell + 10],
-                         y=df['MACD_Hist'][index_X - 10:index_sell + 10]), row=2, col=1)
-    fig.update_layout(height=height, width=width, xaxis_rangeslider_visible=False)
-    fig.show()
-
-
 def minutes_of_new_data(symbol, kline_size, data, start_date, source):
     if len(data) > 0:
         old = parser.parse(data["timestamp"].iloc[-1])
@@ -133,7 +103,7 @@ def data_prep(start_date, symbol, data_step):
                                  'trades', 'tb_base_av', 'tb_quote_av'])
     data1 = data.astype(float).copy(deep=True)
     data2 = Ichi(data1, 9, 26, 52)
-    data3 = MACD_IND(data2, 5, 48, 10)
+    data3 = MACD_IND(data2, 13, 48, 9)
     df = data3.copy(deep=True)
     df.reset_index(inplace=True)
     return df
@@ -211,7 +181,7 @@ binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120
 batch_size = 750
 binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMrCl7lZhhJSIM1ijIzS',
                         api_secret='JjJRJ3bWQTEShF4Eu8ZigY9aEMGPnFNJMH3WoNlOQgxSgrHmLOflIavhMx0KSZFC')
-binance_symbols = ['LTCUSDT']
+binance_symbols = ['TRXUSDT']
 start_date = '19 Mar 2021'
 # end_date = '2021-10-01 01:00:00'
 data_steps = ['30m']
