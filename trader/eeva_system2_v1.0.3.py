@@ -339,25 +339,25 @@ def trader(*args):
                                             enter = 0
                                             index_sell = date_pointer2
                                             exit_price = xab[3]
-                                            # print_trade(df, df2, X, A, B, xab, enter_price,
-                                            #             exit_price,
-                                            #             index_X, index_A, index_B,
-                                            #             index_buy, index_sell)
+                                            print_trade(df, df2, X, A, B, xab, enter_price,
+                                                        exit_price,
+                                                        index_X, index_A, index_B,
+                                                        index_buy, index_sell)
                                             if exit_price > B:
                                                 profit = leverage * (
                                                         (exit_price - B) / B) - trade_fee
                                                 money = money + profit * money
                                                 profit_loss_list.append(profit)
                                                 num_of_pos_trades += 1
-                                                # print('profit:', profit)
-                                                # print('money:', money)
+                                                print('profit:', profit)
+                                                print('money:', money)
                                             if exit_price <= B:
                                                 loss = leverage * ((exit_price - B) / B) - trade_fee
                                                 money = money + loss * money
                                                 profit_loss_list.append(loss)
                                                 num_of_neg_trades += 1
-                                                # print('loss:', loss)
-                                                # print('money:', money)
+                                                print('loss:', loss)
+                                                print('money:', money)
                                             # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
                                             #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
                                             date_of_trade_list.append(df2['timestamp'][
@@ -385,25 +385,25 @@ def trader(*args):
                                             enter = 0
                                             index_sell = date_pointer2
                                             exit_price = xab[3]
-                                            # print_trade(df, df2, X, A, B, xab, enter_price, \
-                                            #             exit_price,
-                                            #             index_X, index_A, index_B,
-                                            #             index_buy, index_sell)
+                                            print_trade(df, df2, X, A, B, xab, enter_price, \
+                                                        exit_price,
+                                                        index_X, index_A, index_B,
+                                                        index_buy, index_sell)
                                             if exit_price < B:
                                                 profit = leverage * (
                                                         (B - exit_price) / B) - trade_fee
                                                 money = money + profit * money
                                                 profit_loss_list.append(profit)
                                                 num_of_pos_trades += 1
-                                                # print('profit:', profit)
-                                                # print('money:', money)
+                                                print('profit:', profit)
+                                                print('money:', money)
                                             if exit_price >= B:
                                                 loss = leverage * ((B - exit_price) / B) - trade_fee
                                                 money = money + loss * money
                                                 profit_loss_list.append(loss)
                                                 num_of_neg_trades += 1
-                                                # print('loss:', loss)
-                                                # print('money:', money)
+                                                print('loss:', loss)
+                                                print('money:', money)
                                             # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
                                             #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
                                             date_of_trade_list.append(df2['timestamp'][
@@ -514,21 +514,21 @@ file_includes = 'v2.2.2'
 if run_mode == 1:
     """Data"""
     binance_symbols = ['LTCUSDT']
-    start_date = '1 Jan 2018'
-    end_date = '2021-04-15 00:00:00'
+    start_date = '1 Oct 2021'
+    end_date = '2021-12-30 00:00:00'
     data_steps = ['30m']
     leverage = 1
     plot_width = 1500
     plot_height = 1000
     macd_list = [
-        [6, 48, 18]
+        [5, 40, 4]
     ]
     for macd_value in macd_list:
         trader(*macd_value)
 
 else:
     # NOTE: if you want to give the macd_list manually, please change this part.
-    os.chdir('D:/Python projects/EEVA/trader/Gentic results/Sys2.2.2/')
+    os.chdir('D:/Python projects/EEVA/trader/Gentic results/Sys2.2.2/Genetic/Money/New Folder')
     csv_files = os.listdir()
     this_sys_related_csv_files = [x for x in csv_files if file_includes in x]
 
@@ -538,7 +538,7 @@ else:
         file_name_list = f.split('-')
         binance_symbols = [file_name_list[3]]
         start_date = '1 Mar 2018'
-        end_date = '2021-04-15 00:00:00'
+        end_date = '2021-10-15 00:00:00'
         data_steps = [file_name_list[-1].split('.')[0]]
         leverage = 1
 
