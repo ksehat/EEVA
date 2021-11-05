@@ -96,11 +96,32 @@ def xab_initializer(xab):
     return X, A, B, index_X, index_A, index_B, index_4, flag
 
 
-def xab_enter_check(df, date_pointer, xab, enter):
-    if xab[2] and df['close'][date_pointer] >= xab[0][2]:
-        enter = 1
-    if not xab[2] and df['close'][date_pointer] <= xab[0][2]:
-        enter = 1
+def xab_enter_check(df, df2, date_pointer, date_pointer2, xab, enter):
+    if xab[6][0] == 1:
+        if xab[2] and df['low'][date_pointer] <= xab[0][2] and max(df['high'][xab[6][
+            1]:date_pointer + 1]) <= xab[0][3] + 1.618 * (xab[0][2] - xab[0][3]):
+            enter = 1
+            if df2['MACD1_Hist'][date_pointer2-2] < 0 or df2['MACD1_Hist'][date_pointer2-1] < 0:
+                xab[4] = df['low'][date_pointer]
+            else:
+                xab[3] = xab[0][3]  # C is placed in sl
+                xab[4] = xab[0][3]  # C is placed in sudo_sl
+        if not xab[2] and df['high'][date_pointer] >= xab[0][2] and min(df['low'][xab[6][
+            1]:date_pointer + 1]) >= xab[0][3] - 1.618 * (xab[0][3] - xab[0][2]):
+            enter = 1
+            if df2['MACD1_Hist'][date_pointer2-2] > 0 or df2['MACD1_Hist'][date_pointer2-1] > 0:
+                xab[4] = df['high'][date_pointer]
+            else:
+                xab[3] = xab[0][3]  # C is placed in sl
+                xab[4] = xab[0][3]  # C is placed in sudo_sl
+    if xab[6][0] == 0:
+        if xab[2] and df['close'][date_pointer] >= xab[0][2]:
+            xab[6][0] = 1
+            xab[6][1] = date_pointer  # this is the date where for
+            # the first time the candel breaks B
+        if not xab[2] and df['close'][date_pointer] <= xab[0][2]:
+            xab[6][0] = 1
+            xab[6][1] = date_pointer
     return enter
 
 
@@ -316,7 +337,10 @@ def trader(*args):
                     Index_4 = ZC_Index.iloc[row_zcindex + 3, 0]
                     XAB_list.append(
                         [[X, A, B, None], [index_X, index_A, index_B, None, Index_4],
-                         xab_flag, None, None, 0])
+                         xab_flag, None, None, 0, [0, None]])  # xab[XABC,index_XABC,flag,
+                    # sude&stoploss,
+                    # C is fined, [if the candel break the B for the first time or not,
+                    # date of the first break]]
                 # endregion
 
             if df['MACD1_Hist'][zcindex[0]] < 0:
@@ -339,7 +363,7 @@ def trader(*args):
                     Index_4 = ZC_Index.iloc[row_zcindex + 3, 0]
                     XAB_list.append(
                         [[X, A, B, None], [index_X, index_A, index_B, None, Index_4],
-                         xab_flag, None, None, 0])
+                         xab_flag, None, None, 0, [0, None]])
                 # endregion
     # endregion #
     # region initializing params
@@ -365,25 +389,26 @@ def trader(*args):
     flag1 = 0
     for date_pointer in range(XAB_list[0][1][4], len(df)):
         date_pointer22 = equal_date_pointer(df, df2, date_pointer, date_pointer2, data_step)
-        XAB_valid_list = [x for x in XAB_list if date_pointer >= x[1][
-            4]]  # This is the list of XABs before the date_pointer
-        for idx_xab, xab in enumerate(XAB_valid_list[
-                                      ::-1]):  # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xab_flag, sl, sudo_sl, dont_find_C]
+        XAB_valid_list = [x for x in XAB_list if date_pointer >= x[1][4]]
+        # This is the list of XABs before the date_pointer
+        for idx_xab, xab in enumerate(XAB_valid_list[::-1]):
+            # xabc = [[X, A, B, C], [index_X, index_A,
+            # index_B, index_4, index_C], xab_flag, sl, sudo_sl, dont_find_C,
+            # enter_point_consideration]
             if xab not in XAB_del_list:
                 X, A, B, index_X, index_A, index_B, index_4, flag = xab_initializer(xab)
                 if enter == 0:
                     xab, XAB_del_list = xab_completor(df, date_pointer, xab, XAB_del_list)
                     if xab[0][3]:
-                        enter = xab_enter_check(df, date_pointer, xab, enter)
+                        enter = xab_enter_check(df, df2, date_pointer, date_pointer22, xab, enter)
                     if enter == 1:
                         money1 = None
                         index_buy = date_pointer
                         xab_buy = xab
                         enter_price = xab[0][2]
-                        xab[3] = xab[0][3]  # C is placed in sl
-                        xab[4] = xab[0][3]  # C is placed in sudo_sl
+
                         money_before_each_trade_list.append(money)
-                    elif xab[0][3] and xab[5]:
+                    elif xab[0][3] and xab[5] and not xab[6][0]:
                         XAB_del_list, XAB_check_list = xab_reject_decision(df, date_pointer,
                                                                            xab,
                                                                            XAB_del_list,
@@ -458,7 +483,7 @@ def trader(*args):
                                             print('profit:', pl_tot)
                                         print('money:', money)
                                         profit_loss_list.append(pl_tot)
-                                        date_of_trade_list.append(df['timestamp'][date_pointer2])
+                                        date_of_trade_list.append(df['timestamp'][date_pointer])
                                         num_of_neg_trades_list.append(num_of_neg_trades)
                                         num_of_pos_trades_list.append(num_of_pos_trades)
                                         money_after_each_trade_list.append(money)
@@ -508,7 +533,7 @@ def trader(*args):
                                             print('profit:', pl_tot)
                                         print('money:', money)
                                         profit_loss_list.append(pl_tot)
-                                        date_of_trade_list.append(df['timestamp'][date_pointer2])
+                                        date_of_trade_list.append(df['timestamp'][date_pointer])
                                         num_of_neg_trades_list.append(num_of_neg_trades)
                                         num_of_pos_trades_list.append(num_of_pos_trades)
                                         money_after_each_trade_list.append(money)
@@ -582,7 +607,7 @@ def trader(*args):
                                             print('profit:', pl_tot)
                                         print('money:', money)
                                         profit_loss_list.append(pl_tot)
-                                        date_of_trade_list.append(df['timestamp'][date_pointer2])
+                                        date_of_trade_list.append(df['timestamp'][date_pointer])
                                         num_of_neg_trades_list.append(num_of_neg_trades)
                                         num_of_pos_trades_list.append(num_of_pos_trades)
                                         money_after_each_trade_list.append(money)
@@ -741,8 +766,8 @@ binance_client = Client(api_key='43PXiL32cF1YFXwkeoK900wOZx8saS1T5avSRWlljStfwMr
 
 """Data"""
 binance_symbols = ['LTCUSDT']
-start_date = '1 Jan 2021'
-end_date = '2021-03-10 00:00:00'
+start_date = '1 Mar 2018'
+end_date = '2021-09-10 00:00:00'
 data_steps = ['1h']
 leverage = 1
 plot_width = 1500
