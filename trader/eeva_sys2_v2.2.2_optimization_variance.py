@@ -514,12 +514,12 @@ coins_datastep_list =[
     # ('ETHUSDT','1h'),
     # ('TRXUSDT', '1h'),
     # ('NEOUSDT', '1h'),
-    ('LTCUSDT', '30m'),
+    # ('LTCUSDT', '30m'),
     # ('BTCUSDT', '30m'),
-    # ('IOTAUSDT','30m'),
+    ('IOTAUSDT','30m'),
     ('ETHUSDT', '30m'),
-    # ('TRXUSDT', '30m'),
-    # ('NEOUSDT', '30m'),
+    ('TRXUSDT', '30m'),
+    ('NEOUSDT', '30m'),
 
     # ('LTCUSDT', '15m'),
     # ('BTCUSDT', '15m'),
@@ -542,7 +542,7 @@ plot_height = 1000
 for symbol, data_step in coins_datastep_list:
     best_params = GA.run()
     print(best_params)
-    best_params.to_csv(f'Genetic-v2.2.2-{symbol}-{start_date}-{data_step}.csv', index=True)
+    best_params.to_csv(f'Genetic-variance-v2.2.2-{symbol}-{start_date}-{data_step}.csv', index=True)
 #
 #
 # os.system("shutdown /s /t 1")
