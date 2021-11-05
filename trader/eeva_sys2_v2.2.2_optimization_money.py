@@ -290,7 +290,7 @@ def trader(x):
                                                                            XAB_del_list,
                                                                            XAB_check_list)
 
-                else:  # If it is in trade
+                if enter==1:  # If it is in trade
                     if xab != xab_buy:
                         xab, XAB_del_list = xab_completor(df, date_pointer, xab,
                                                           XAB_del_list)
@@ -492,11 +492,11 @@ coins_datastep_list =[
     # ('TRXUSDT', '1h'),
     # ('NEOUSDT', '1h'),
     ('LTCUSDT', '30m'),
-    ('BTCUSDT', '30m'),
-    ('IOTAUSDT','30m'),
-    ('ETHUSDT', '30m'),
-    ('TRXUSDT', '30m'),
-    ('NEOUSDT', '30m'),
+    # ('BTCUSDT', '30m'),
+    # ('IOTAUSDT','30m'),
+    # ('ETHUSDT', '30m'),
+    # ('TRXUSDT', '30m'),
+    # ('NEOUSDT', '30m'),
 
     # ('LTCUSDT', '15m'),
     # ('BTCUSDT', '15m'),
@@ -506,8 +506,8 @@ coins_datastep_list =[
     # ('NEOUSDT', '15m'),
 ]
 # region Data
-start_date = '1 Apr 2020'
-end_date = '2021-04-15 00:00:00'
+start_date = '1 Jan 2020'
+end_date = '2021-03-30 00:00:00'
 leverage = 1
 plot_width = 1500
 plot_height = 1000
@@ -519,7 +519,7 @@ plot_height = 1000
 for symbol, data_step in coins_datastep_list:
     best_params = GA.run()
     print(best_params)
-    best_params.to_csv(f'Genetic-v2.2.2-money-{symbol}-{start_date}-{data_step}.csv', index=True)
+    best_params.to_csv(f'Genetic-money-v2.2.2-{symbol}-{start_date}-{data_step}.csv', index=True)
 #
 #
 # os.system("shutdown /s /t 1")
