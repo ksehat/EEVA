@@ -411,7 +411,6 @@ def trader(*args):
         date_pointer22 = equal_date_pointer(df, df2, date_pointer, date_pointer2, data_step)
         # This is the list of XABs before the date_pointer
         XAB_valid_list = [x for x in XAB_list if date_pointer >= x[1][4]]
-
         # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xab_flag, sl, sudo_sl, dont_find_C]
         for idx_xab, xab in enumerate(XAB_valid_list[::-1]):
             if exit_at_this_candel == 1: break
@@ -419,7 +418,7 @@ def trader(*args):
                 X, A, B, index_X, index_A, index_B, index_4 = xab_initializer(xab)
                 if enter == 0:
                     xab, XAB_del_list = xab_completor(df, date_pointer, xab, XAB_del_list)
-                    if xab[0][3]:
+                    if xab[0][3] and not exit_at_this_candel:
                         enter, virtual_enter = xab_enter_check(df, df2, date_pointer,
                                                                date_pointer22, xab, enter,
                                                                virtual_enter)
@@ -432,45 +431,20 @@ def trader(*args):
                             index_buy = date_pointer
                             xab_buy = xab
                             enter_price = xab[0][2]
-                            # xab[3] = xab[0][3]  # C is placed in sl
-                            # xab[4] = xab[0][3]  # C is placed in sudo_sl
                             money_before_each_trade_list.append(money)
 
-                    # if enter == 0 and XAB_check_list and exit_at_this_candel==0:
-                    #     enter, virtual_enter, enter_with_checklist, index_buy, xab_buy, \
-                    #     enter_price, \
-                    #     XAB_check_list, \
-                    #     money_before_each_trade_list, money1, xab_temp = \
-                    #         enter_check_with_cheklist(df,
-                    #                                   date_pointer,
-                    #                                   enter,
-                    #                                   enter_with_checklist,
-                    #                                   XAB_check_list,
-                    #                                   money,
-                    #                                   money1,
-                    #                                   money_before_each_trade_list,
-                    #                                   index_buy,
-                    #                                   xab_buy,
-                    #                                   enter_price,
-                    #                                   virtual_enter)
-                    #     if virtual_enter == 1:
-                    #         XAB_del_list.append(xab_temp)
-                    #         virtual_enter = 0
-                    #     if enter == 1 and xab_buy in XAB_del_list:
-                    #         XAB_del_list.remove(xab_buy)
-
-                if enter == 0 and xab[0][3] and xab[5]:
-                    XAB_del_list, XAB_check_list = xab_reject_decision(df, date_pointer,
-                                                                       xab,
-                                                                       xab_buy,
-                                                                       XAB_del_list,
-                                                                       XAB_check_list)
+                        if enter == 0 and xab[0][3] and xab[5]:
+                            XAB_del_list, XAB_check_list = xab_reject_decision(df, date_pointer,
+                                                                               xab,
+                                                                               xab_buy,
+                                                                               XAB_del_list,
+                                                                               XAB_check_list)
 
                 if enter == 1:  # If it is in trade
                     if xab != xab_buy:
                         xab, XAB_del_list = xab_completor(df, date_pointer, xab,
                                                           XAB_del_list)
-                        if xab[0][3]:
+                        if xab[0][3] and xab[5]:
                             XAB_del_list, XAB_check_list = xab_reject_decision(df,
                                                                                date_pointer,
                                                                                xab,
