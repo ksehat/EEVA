@@ -1,12 +1,34 @@
-
+from my_geneticalgorithm import MyGeneticAlgorithm as mga
 import concurrent.futures
+import math
+import multiprocessing
 
-def power_by_two(x):
-    return x*x
+PRIMES = [
+    112272535095293,
+    112582705942171,
+    112272535095293,
+    115280095190773,
+    115797848077099,
+    1099726899285419]
 
-def list_power_by_two(list_of_params):
-    for i in range(len(list_of_params)):
-        print(power_by_two(list_of_params[i]))
+def is_prime(n):
+    if n < 2:
+        return False
+    if n == 2:
+        return True
+    if n % 2 == 0:
+        return False
 
-with concurrent.futures.ProcessPoolExecutor() as executor:
-    executor.map(function_name, power_by_two)
+    sqrt_n = int(math.floor(math.sqrt(n)))
+    for i in range(3, sqrt_n + 1, 2):
+        if n % i == 0:
+            return False
+    return True
+def main():
+    pool = multiprocessing.Pool()
+    result = pool.map(is_prime, PRIMES)
+    print(result)
+
+if __name__ == '__main__':
+    main()
+
