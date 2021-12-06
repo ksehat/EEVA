@@ -546,19 +546,19 @@ binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120
             "6h": 360, "12h": 720, "1d": 1440}
 batch_size = 750
 
-run_mode=0
+run_mode=1
 file_includes = 'v2.2.1'
 if run_mode==1:
     """Data"""
-    binance_symbols = ['ETHUSDT']
-    start_date = '1 Jan 2021'
-    end_date = '2021-09-15 00:00:00'
+    binance_symbols = ['IOTAUSDT']
+    start_date = '1 Oct 2021'
+    end_date = '2021-11-01 10:00:00'
     data_steps = ['30m']
     leverage = 1
     plot_width = 1500
     plot_height = 1000
     macd_list = [
-        [6, 30, 8]
+        [5, 48, 6]
     ]
     for macd_value in macd_list:
         trader(*macd_value)
