@@ -319,10 +319,10 @@ def trader(*args):
                                                                                    XAB_check_list)
 
                         if enter == 1:  # If it is in trade
-                            if xab != xab_buy:
+                            if xab != xab_buy and xab[5]==0:
                                 xab, XAB_del_list = xab_completor(df, date_pointer, xab,
                                                                   XAB_del_list)
-                                if xab[0][3]:
+                                if xab[0][3] and xab[5]:
                                     XAB_del_list, XAB_check_list = xab_reject_decision(df,
                                                                                        date_pointer,
                                                                                        xab,
@@ -510,25 +510,26 @@ binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120
 batch_size = 750
 
 run_mode = 1
-file_includes = 'v2.2.2'
+file_includes = 'v1.0.3'
 if run_mode == 1:
     """Data"""
-    binance_symbols = ['LTCUSDT']
+    binance_symbols = ['ETHUSDT']
     start_date = '1 Oct 2021'
-    end_date = '2021-12-30 00:00:00'
+    end_date = '2021-10-10 00:00:00'
     data_steps = ['30m']
     leverage = 1
     plot_width = 1500
     plot_height = 1000
     macd_list = [
-        [5, 40, 4]
+        [13, 24, 10]
     ]
     for macd_value in macd_list:
         trader(*macd_value)
 
 else:
     # NOTE: if you want to give the macd_list manually, please change this part.
-    os.chdir('D:/Python projects/EEVA/trader/Gentic results/Sys2.2.2/Genetic/Money/New Folder')
+    os.chdir('D:/Python projects/EEVA/trader/Genetic Results/Sys1.0.3/Genetic/weighted '
+             'money')
     csv_files = os.listdir()
     this_sys_related_csv_files = [x for x in csv_files if file_includes in x]
 
@@ -536,9 +537,9 @@ else:
         df_csv = pd.read_csv(f)
         macd_list = [ast.literal_eval(x) for x in df_csv['members'].tolist()]
         file_name_list = f.split('-')
-        binance_symbols = [file_name_list[3]]
+        binance_symbols = [file_name_list[4]]
         start_date = '1 Mar 2018'
-        end_date = '2021-10-15 00:00:00'
+        end_date = '2021-11-15 00:00:00'
         data_steps = [file_name_list[-1].split('.')[0]]
         leverage = 1
 
