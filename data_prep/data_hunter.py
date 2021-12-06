@@ -70,7 +70,8 @@ class DataHunter():
         else:
             data_df = data
         data_df.set_index('timestamp', inplace=True)
-        if save: data_df.to_csv(filename)
+        if save:
+            data_df.to_csv(filename)
         print('All caught up..!')
         return data_df
 
@@ -78,7 +79,28 @@ class DataHunter():
         filename = f'{self.symbol}-{self.step}-data-from-{self.start_date}.csv'
         if os.path.isfile(filename):
             data_org = pd.read_csv(filename, index_col=0)
-        else: data_org = self._get_save_data()
+        else:
+            data_org = self._get_save_data()
+        # data_org = self._get_save_data()
+        data_org.index = data_org.index.map(lambda x: x if type(x) == str else str(x))
+        data_org = data_org[~data_org.index.duplicated(keep='last')]
+        data = data_org[:self.end_date].filter(['open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_av',
+                                           'trades', 'tb_base_av', 'tb_quote_av'])
+        data1 = copy.deepcopy(data.astype(float))
+        data2 = self.Ichi_IND(data1,9,26,52)
+        data3 = self.MACD_IND(data2,macd_slow,macd_fast,macd_sign,1)#6,24,12
+        # data4 = self.MACD_IND(data3, macd2_slow, macd2_fast, macd2_sign, 2)  # 6,24,12
+        df = data3.copy(deep=True)
+        df.reset_index(inplace=True)
+        return df
+
+    def prepare_data_online(self, macd_slow=6, macd_fast=24, macd_sign=12, macd2_slow=6,
+                          macd2_fast=24, macd2_sign=12):
+        # filename = f'{self.symbol}-{self.step}-data-from-{self.start_date}.csv'
+        # if os.path.isfile(filename):
+        #     data_org = pd.read_csv(filename, index_col=0)
+        # else: data_org = self._get_save_data()
+        data_org = self._get_save_data()
         data_org.index = data_org.index.map(lambda x: x if type(x) == str else str(x))
         data_org = data_org[~data_org.index.duplicated(keep='last')]
         data = data_org[:self.end_date].filter(['open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_av',
