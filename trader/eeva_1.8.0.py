@@ -33,7 +33,7 @@ def print_trade(df, df2, X, A, B, xab, enter_price, exit_price, index_X, index_A
     print(df['timestamp'][index_B], 'B:', B)
     print(df['timestamp'][xab[1][3]], 'C:', xab[0][3])
     print(df['timestamp'][index_buy], 'enter:', enter_price)
-    print(df['timestamp'][index_sell], 'exit:', exit_price)
+    print(df2['timestamp'][index_sell], 'exit:', exit_price)
 
 
 def xab_initializer(xab):
@@ -53,18 +53,9 @@ def xab_initializer(xab):
 
 def xab_enter_check(df, date_pointer, xab, enter, enter_price, fibo_enter, C_at_this_candle,
                     XAB_virtual_list):
-    if xab[2] and df['high'][date_pointer] >= xab[0][2]:
-        if not C_at_this_candle:
-            enter = 1
-            enter_price = xab[0][2]
-        if C_at_this_candle:
-            if df['close'][date_pointer] <= xab[0][2]:
-                enter = 1
-                enter_price = df['close'][date_pointer]
-            if df['close'][date_pointer] > xab[0][2]:
-                enter = 1
-                enter_price = xab[0][2]
-                XAB_virtual_list.append(xab)
+    if xab[2] and df['close'][date_pointer] >= xab[0][2]:
+        enter = 1
+        enter_price = df['close'][date_pointer]
         if enter:
             xab[3] = xab[0][3]  # C is placed in sl
             xab[4] = df['low'][date_pointer]  # C is placed in sudo_sl
@@ -75,18 +66,9 @@ def xab_enter_check(df, date_pointer, xab, enter, enter_price, fibo_enter, C_at_
                         0][3]:
                         xab[4] = df['low'][date_pointer - i]
                     i += 1
-    if not xab[2] and df['low'][date_pointer] <= xab[0][2]:
-        if not C_at_this_candle:
-            enter = 1
-            enter_price = xab[0][2]
-        if C_at_this_candle:
-            if df['close'][date_pointer] >= xab[0][2]:
-                enter = 1
-                enter_price = df['close'][date_pointer]
-            if df['close'][date_pointer] < xab[0][2]:
-                enter = 1
-                enter_price = xab[0][2]
-                XAB_virtual_list.append(xab)
+    if not xab[2] and df['close'][date_pointer] <= xab[0][2]:
+        enter = 1
+        enter_price = df['close'][date_pointer]
         if enter:
             xab[3] = xab[0][3]  # C is placed in sl
             xab[4] = df['high'][date_pointer]  # C is placed in sudo_sl
@@ -158,6 +140,18 @@ def xab_reject_decision(df, dp, xab, XAB_del_list, XAB_check_list):
         if df['high'][dp] > xab[0][3] or df['close'][dp] < xab[0][2]:
             XAB_del_list.append(xab)
     return XAB_del_list, XAB_check_list
+
+
+def equal_date_pointer(df1, df2, dp1, dp2, main_data_step):
+    dp2_str = df1['timestamp'][dp1]
+    # if main_data_step == main_data_step:
+    try:
+        dp2 = df2[df2['timestamp'] == dp2_str].index.values[0] + 2
+    except IndexError:
+        print(f"there occurs an error in {df1['timestamp'][dp1]}")  # This is for debug of
+        # dataframes
+        dp2 = dp2 + 2
+    return dp2
 
 
 def stop_loss_trail(df, date_pointer, xab):
@@ -269,21 +263,25 @@ def trader(args):
     XAB_del_list = []  # This the list of XABs that are rejected
     XAB_check_list = []  # This is the list of XABs that may be entered and are valid to enter but right now the system is in trade
     XAB_virtual_list = []
+    date_pointer2 = 0
     exit_at_this_candel = 0
     fibo_enter = 1.618
     enter_price = 0
+
     for date_pointer in range(XAB_list[0][1][4], len(df)):
         exit_at_this_candel = 0
+        date_pointer22 = equal_date_pointer(df, df2, date_pointer, date_pointer2, data_step)
         # This is the list of XABs before the date_pointer
         XAB_valid_list = [x for x in XAB_list if date_pointer >= x[1][4]]
         # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xab_flag, sl, sudo_sl, dont_find_C]
         for idx_xab, xab in enumerate(XAB_valid_list[::-1]):
             if xab not in XAB_del_list:
+                X, A, B, index_X, index_A, index_B, index_4, flag = xab_initializer(xab)
                 if enter == 0:
                     if xab[5] == 0:
                         xab, XAB_del_list, C_at_this_candle = xab_completor(df, date_pointer, xab,
                                                                             XAB_del_list)
-                    if xab[0][3]:# and not exit_at_this_candel:
+                    if xab[0][3] and not exit_at_this_candel:
                         enter, enter_price, XAB_virtual_list = xab_enter_check(df, date_pointer,
                                                                                xab, enter,
                                                                                enter_price,
@@ -299,8 +297,7 @@ def trader(args):
                                                                            xab,
                                                                            XAB_del_list,
                                                                            XAB_check_list)
-                    if enter == 1:
-                        continue
+
                 if enter == 1:  # If it is in trade
                     if xab != xab_buy:
                         if xab[5] == 0:
@@ -313,98 +310,110 @@ def trader(args):
                                                                                XAB_del_list,
                                                                                XAB_check_list)
                     if xab == xab_buy:
-                        sl_at_this_candle = 0
-                        if date_pointer > len(df) - 1:
-                            exit_at_this_candel = 1
-                            continue
-                        if macd_phase_change(df, date_pointer):
-                            if xab[3] != xab[4]:
-                                xab[3] = xab[4]
-                                sl_at_this_candle = 1
-                        # This is because when the phase is changed, first you need to
-                        # replace the sl with sudo_sl
-                        if xab[2] == 1:
-                            if df['low'][date_pointer] < xab[3]:
-                                enter = 0
-                                xab_buy = None
-                                index_sell = date_pointer
-                                if sl_at_this_candle == 0:
-                                    exit_price = xab[3]
-                                else:
-                                    exit_price = df['close'][date_pointer]
-                                sl_at_this_candle = 0  # very important
-                                if print_outputs:
-                                    print_trade(df, df2, xab[0][0], xab[0][1], xab[0][2], xab,
-                                                enter_price,
-                                                exit_price,
-                                                xab[1][0], xab[1][1], xab[1][2],
-                                                index_buy, index_sell)
-                                if exit_price > enter_price:
-                                    profit = leverage * ((exit_price - enter_price) / enter_price) - trade_fee
-                                    money = money + profit * money
-                                    profit_loss_list.append(profit)
-                                    num_of_pos_trades += 1
+                        for date_pointer2 in [date_pointer22, date_pointer22 + 1]:
+                            sl_at_this_candle = 0
+                            if enter == 0 or date_pointer2 > len(df2) - 1:
+                                exit_at_this_candel = 1
+                                break
+                            if macd_phase_change(df2, date_pointer2):
+                                if xab[3] != xab[4]:
+                                    xab[3] = xab[4]
+                                    sl_at_this_candle = 1
+                            # This is because when the phase is changed, first you need to
+                            # replace the sl with sudo_sl
+                            if xab[2] == 1:
+                                if df2['low'][date_pointer2] < xab[3]:
+                                    enter = 0
+                                    xab_buy = None
+                                    index_sell = date_pointer2
+                                    if sl_at_this_candle == 0:
+                                        exit_price = xab[3]
+                                    else:
+                                        exit_price = df2['close'][date_pointer2]
+                                    sl_at_this_candle = 0  # very important
                                     if print_outputs:
-                                        print('profit:', profit)
-                                        print('money:', money)
-                                if exit_price <= enter_price:
-                                    loss = leverage * ((exit_price - enter_price) / enter_price) - trade_fee
-                                    money = money + loss * money
-                                    profit_loss_list.append(loss)
-                                    num_of_neg_trades += 1
-                                    if print_outputs:
-                                        print('loss:', loss)
-                                        print('money:', money)
-                                # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
-                                #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
-                                date_of_trade_list.append(df['timestamp'][date_pointer])
-                                num_of_neg_trades_list.append(num_of_neg_trades)
-                                num_of_pos_trades_list.append(num_of_pos_trades)
-                                money_after_each_trade_list.append(money)
-                                XAB_del_list.append(xab)
+                                        print_trade(df, df2, xab[0][0], xab[0][1], xab[0][2], xab,
+                                                    enter_price,
+                                                    exit_price,
+                                                    index_X, index_A, index_B,
+                                                    index_buy, index_sell)
+                                    if exit_price > enter_price:
+                                        profit = leverage * (
+                                                (
+                                                        exit_price - enter_price) / enter_price) - trade_fee
+                                        money = money + profit * money
+                                        profit_loss_list.append(profit)
+                                        num_of_pos_trades += 1
+                                        if print_outputs:
+                                            print('profit:', profit)
+                                            print('money:', money)
+                                    if exit_price <= enter_price:
+                                        loss = leverage * ((
+                                                                   exit_price - enter_price) / enter_price) - trade_fee
+                                        money = money + loss * money
+                                        profit_loss_list.append(loss)
+                                        num_of_neg_trades += 1
+                                        if print_outputs:
+                                            print('loss:', loss)
+                                            print('money:', money)
+                                    # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
+                                    #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
+                                    date_of_trade_list.append(df2['timestamp'][
+                                                                  date_pointer2])
+                                    num_of_neg_trades_list.append(num_of_neg_trades)
+                                    num_of_pos_trades_list.append(num_of_pos_trades)
+                                    money_after_each_trade_list.append(money)
+                                    XAB_del_list.append(xab)
 
-                            else:
-                                stop_loss_trail(df, date_pointer, xab)
-
-                        if xab[2] == 0:
-                            if df['high'][date_pointer] > xab[3]:
-                                enter = 0
-                                xab_buy = None
-                                index_sell = date_pointer
-                                if sl_at_this_candle == 0:
-                                    exit_price = xab[3]
                                 else:
-                                    exit_price = df['close'][date_pointer]
-                                sl_at_this_candle = 0  # very important
-                                if print_outputs:
-                                    print_trade(df, df2, xab[0][0], xab[0][1], xab[0][2], xab,
-                                                enter_price, \
-                                                exit_price,
-                                                xab[1][0], xab[1][1], xab[1][2],
-                                                index_buy, index_sell)
-                                if exit_price < enter_price:
-                                    profit = leverage * ((enter_price - exit_price) / enter_price) - trade_fee
-                                    money = money + profit * money
-                                    profit_loss_list.append(profit)
-                                    num_of_pos_trades += 1
+                                    stop_loss_trail(df2, date_pointer2, xab)
+
+                            if xab[2] == 0:
+                                if df2['high'][date_pointer2] > xab[3]:
+                                    enter = 0
+                                    xab_buy = None
+                                    index_sell = date_pointer2
+                                    if sl_at_this_candle == 0:
+                                        exit_price = xab[3]
+                                    else:
+                                        exit_price = df2['close'][date_pointer2]
+                                    sl_at_this_candle = 0  # very important
                                     if print_outputs:
-                                        print('profit:', profit)
-                                        print('money:', money)
-                                if exit_price >= enter_price:
-                                    loss = leverage * ((enter_price - exit_price) / enter_price) - trade_fee
-                                    money = money + loss * money
-                                    profit_loss_list.append(loss)
-                                    num_of_neg_trades += 1
-                                    if print_outputs:
-                                        print('loss:', loss)
-                                        print('money:', money)
-                                date_of_trade_list.append(df['timestamp'][date_pointer])
-                                num_of_neg_trades_list.append(num_of_neg_trades)
-                                num_of_pos_trades_list.append(num_of_pos_trades)
-                                money_after_each_trade_list.append(money)
-                                XAB_del_list.append(xab)
-                            else:
-                                stop_loss_trail(df, date_pointer, xab)
+                                        print_trade(df, df2, xab[0][0], xab[0][1], xab[0][2], xab,
+                                                    enter_price, \
+                                                    exit_price,
+                                                    index_X, index_A, index_B,
+                                                    index_buy, index_sell)
+                                    if exit_price < enter_price:
+                                        profit = leverage * (
+                                                (
+                                                        enter_price - exit_price) / enter_price) - trade_fee
+                                        money = money + profit * money
+                                        profit_loss_list.append(profit)
+                                        num_of_pos_trades += 1
+                                        if print_outputs:
+                                            print('profit:', profit)
+                                            print('money:', money)
+                                    if exit_price >= enter_price:
+                                        loss = leverage * (
+                                                (enter_price - exit_price) / enter_price) - \
+                                               trade_fee
+                                        money = money + loss * money
+                                        profit_loss_list.append(loss)
+                                        num_of_neg_trades += 1
+                                        if print_outputs:
+                                            print('loss:', loss)
+                                            print('money:', money)
+                                    # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
+                                    #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
+                                    date_of_trade_list.append(df2['timestamp'][
+                                                                  date_pointer2])
+                                    num_of_neg_trades_list.append(num_of_neg_trades)
+                                    num_of_pos_trades_list.append(num_of_pos_trades)
+                                    money_after_each_trade_list.append(money)
+                                    XAB_del_list.append(xab)
+                                else:
+                                    stop_loss_trail(df2, date_pointer2, xab)
     if print_outputs:
         print(XAB_virtual_list)
     print(money)
