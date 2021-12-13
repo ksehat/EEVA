@@ -1,20 +1,10 @@
 # This system uses trailing stop loss with lower time step
 import pandas as pd
-import math
+import numpy as np
 import ast
 import os.path
 import concurrent.futures
-import time
-import ta
-from binance.client import Client
-from datetime import timedelta, datetime
-from dateutil import parser
-import numpy as np
-from ta.trend import MACD, EMAIndicator, IchimokuIndicator
-from ta.momentum import RSIIndicator as RSI
-import copy
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+from my_geneticalgorithm_multiprocess import MyGeneticAlgorithm as mga
 from data_prep.data_hunter import DataHunter
 
 
@@ -152,26 +142,33 @@ def stop_loss_trail(df, date_pointer, xab):
         if df['MACD1_Hist'][date_pointer] < 0: xab[3] = xab[4]
 
 
-def trader(args):
-    print_outputs = 1
-    symbol = args[3]
-    start_date = args[4]
-    end_date = args[5]
-    data_step = args[6]
-    leverage = args[7]
-    fibo1 = 5
+def base_coefficient_calc(tot_n_month, static_weight):
+    A = 0
+    for i in range(tot_n_month):
+        A = A + pow(static_weight, i)
+    return 1 / A
+
+
+def trader(args, symbol, data_step):
+    print_outputs = 0
+    # symbol = args[3]
+    # start_date = args[4]
+    # end_date = args[5]
+    # data_step = args[6]
+    # leverage = args[7]
+    fibo1 = args[3]
     # print(args, symbol, data_step)
-    f = open("aaa.txt", "a")
-    f.write(f'\nStart: {args}')
-    f.close()
+    # f = open("aaa.txt", "a")
+    # f.write(f'\nStart: {args}')
+    # f.close()
     Profit_Loss_Table_by_Year_Month_for_symbol = pd.DataFrame()
     # region Data Preparation
     df = DataHunter(symbol=symbol, start_date=start_date, end_date=end_date,
                     step=data_step).prepare_data(macd_slow=args[0], macd_fast=args[1],
                                                  macd_sign=args[2])
-    df2 = DataHunter(symbol=symbol, start_date=start_date, end_date=end_date,
-                     step='15m').prepare_data(macd_slow=args[0], macd_fast=args[1],
-                                              macd_sign=args[2])
+    # df2 = DataHunter(symbol=symbol, start_date=start_date, end_date=end_date,
+    #                  step='15m').prepare_data(macd_slow=args[0], macd_fast=args[1],
+    #                                           macd_sign=args[2])
     ZC_Index = pd.DataFrame({'zcindex': df[df['MACD1_ZC'] == 1].index.values,
                              'timestamp': df.loc[df['MACD1_ZC'] == 1, 'timestamp'],
                              'MACD1_Hist': df.loc[df['MACD1_ZC'] == 1, 'MACD1_Hist']},
@@ -263,7 +260,7 @@ def trader(args):
                     if xab[5] == 0:
                         xab, XAB_del_list, C_at_this_candle = xab_completor(df, date_pointer, xab,
                                                                             XAB_del_list)
-                    if xab[0][3]:# and not exit_at_this_candel:
+                    if xab[0][3]:  # and not exit_at_this_candel:
                         enter, enter_price, XAB_virtual_list = xab_enter_check(df, date_pointer,
                                                                                xab, enter,
                                                                                enter_price,
@@ -296,8 +293,9 @@ def trader(args):
                         if date_pointer > len(df) - 1:
                             continue
                         if xab[2] == 1:
-                            if df['low'][date_pointer] <= xab[0][3] or (df['high'][date_pointer] >=\
-                                    xab[0][3] + fibo1 * (abs(xab[0][2] - xab[0][3]))):
+                            if df['low'][date_pointer] <= xab[0][3] or (df['high'][date_pointer] >= \
+                                                                        xab[0][3] + fibo1 * (abs(
+                                        xab[0][2] - xab[0][3]))):
                                 enter = 0
                                 xab_buy = None
                                 index_sell = date_pointer
@@ -310,7 +308,8 @@ def trader(args):
                                                 xab[1][0], xab[1][1], xab[1][2],
                                                 index_buy, index_sell)
                                 if exit_price > enter_price:
-                                    profit = leverage * ((exit_price - enter_price) / enter_price) - trade_fee
+                                    profit = leverage * ((
+                                                                     exit_price - enter_price) / enter_price) - trade_fee
                                     money = money + profit * money
                                     profit_loss_list.append(profit)
                                     num_of_pos_trades += 1
@@ -318,7 +317,8 @@ def trader(args):
                                         print('profit:', profit)
                                         print('money:', money)
                                 if exit_price <= enter_price:
-                                    loss = leverage * ((exit_price - enter_price) / enter_price) - trade_fee
+                                    loss = leverage * ((
+                                                                   exit_price - enter_price) / enter_price) - trade_fee
                                     money = money + loss * money
                                     profit_loss_list.append(loss)
                                     num_of_neg_trades += 1
@@ -346,7 +346,8 @@ def trader(args):
                                                 xab[1][0], xab[1][1], xab[1][2],
                                                 index_buy, index_sell)
                                 if exit_price < enter_price:
-                                    profit = leverage * ((enter_price - exit_price) / enter_price) - trade_fee
+                                    profit = leverage * ((
+                                                                     enter_price - exit_price) / enter_price) - trade_fee
                                     money = money + profit * money
                                     profit_loss_list.append(profit)
                                     num_of_pos_trades += 1
@@ -354,7 +355,8 @@ def trader(args):
                                         print('profit:', profit)
                                         print('money:', money)
                                 if exit_price >= enter_price:
-                                    loss = leverage * ((enter_price - exit_price) / enter_price) - trade_fee
+                                    loss = leverage * ((
+                                                                   enter_price - exit_price) / enter_price) - trade_fee
                                     money = money + loss * money
                                     profit_loss_list.append(loss)
                                     num_of_neg_trades += 1
@@ -444,70 +446,108 @@ def trader(args):
         pd.concat(
             [Profit_Loss_Table_by_Year_Month_for_symbol, Profit_Loss_Table_by_Year_Month],
             axis=1)
-    f = open("aaa.txt", "a")
-    f.write(f'\nFinish: {args},{money}')
-    f.close()
-    return Profit_Loss_Table_by_Year_Month_for_symbol, money
+    Profit_Loss_Table_by_Year_Month_for_symbol[f'weighted profit & loss_{data_step}'] = np.nan
+    Profit_Loss_Table_by_Year_Month_for_symbol[f'weighted positive trades_{data_step}'] = np.nan
+    Profit_Loss_Table_by_Year_Month_for_symbol[f'weighted negative trades_{data_step}'] = np.nan
+    static_weight = 1.1
+    tot_n_month = len(Profit_Loss_Table_by_Year_Month_for_symbol)
+    base_coefficient = base_coefficient_calc(tot_n_month, static_weight)
+    for i in range(len(Profit_Loss_Table_by_Year_Month_for_symbol)):
+        Profit_Loss_Table_by_Year_Month_for_symbol[f'weighted profit & loss_{data_step}'][i] = \
+            pow(static_weight, i) * base_coefficient * Profit_Loss_Table_by_Year_Month_for_symbol[
+                f'profit & loss_{data_step}'][
+                i]
 
+        Profit_Loss_Table_by_Year_Month_for_symbol[f'weighted positive trades_{data_step}'][i] = \
+            pow(static_weight, i) * base_coefficient * Profit_Loss_Table_by_Year_Month_for_symbol[
+                f'positive trades_{data_step}'][
+                i]
 
-binsizes = {"1m": 1, "5m": 5, "8m": 8, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240,
-            "6h": 360, "12h": 720, "1d": 1440}
-batch_size = 750
+        Profit_Loss_Table_by_Year_Month_for_symbol[f'weighted negative trades_{data_step}'][i] = \
+            pow(static_weight, i) * base_coefficient * Profit_Loss_Table_by_Year_Month_for_symbol[
+                f'negative trades_{data_step}'][
+                i]
+    # endregion
 
+    num_of_months_with_loss = Profit_Loss_Table_by_Year_Month_for_symbol[
+        f'weighted negative trades_{data_step}'].sum()
+
+    num_of_months_with_profit = Profit_Loss_Table_by_Year_Month_for_symbol[
+        f'weighted positive trades_{data_step}'].sum()
+
+    money_negative = Profit_Loss_Table_by_Year_Month_for_symbol[
+        f'weighted profit & loss_{data_step}'][
+        Profit_Loss_Table_by_Year_Month_for_symbol[
+            f'weighted profit & loss_{data_step}'] < 0].sum()
+
+    money_positive = Profit_Loss_Table_by_Year_Month_for_symbol[
+        f'weighted profit & loss_{data_step}'][
+        Profit_Loss_Table_by_Year_Month_for_symbol[
+            f'weighted profit & loss_{data_step}'] > 0].sum()
+
+    if num_of_months_with_loss == 0 or money_negative == 0:
+        decision_factor = money_positive * num_of_months_with_profit * 1000
+    else:
+        decision_factor = (money_positive / abs(money_negative)) * (
+                num_of_months_with_profit / num_of_months_with_loss)
+    print(decision_factor)
+    print('==========')
+    # f = open("aaa.txt", "a")
+    # f.write(f'\nFinish {args}'
+    #         f' {data_step}')
+    # f.close()
+    return decision_factor
 
 def main():
-    run_mode = 0
-    if run_mode == 1:
-        """Data"""
-        symbol = 'ETHUSDT'
-        start_date = '1 Mar 2021'
-        end_date = '2021-12-01 00:00:00'
-        data_step = '30m'
-        leverage = 1
-        plot_width = 1500
-        plot_height = 1000
-        macd_list = [
-            [5, 6, 4, symbol, start_date, end_date, data_step, leverage]
-        ]
-        for macd_value in macd_list:
-            trader(macd_value)
+    for symbol, data_step in coins_datastep_list:
+        GA = mga(config=config, function=trader, symbol=symbol, data_step=data_step, run_iter=5,
+                 population_size=350,
+                 n_crossover=4,
+                 crossover_mode='random')
+        best_params = GA.run(keep_frac=20, mutate_frac=10, crossover_frac=10)
+        print(best_params)
+        best_params.to_csv(f'Genetic-weighted-variance-v0.3.0-{symbol}-{start_date}'
+                           f'-{data_step}.csv',
+                           index=True)
 
-    else:
-        # NOTE: if you want to give the macd_list manually, please change this part.
-        os.chdir('D:/Python projects/EEVA/trader/Genetic Results/Sys1.2.0/Genetic/weighted '
-                 'variance')
-        csv_files = os.listdir()
-        this_sys_related_csv_files = [x for x in csv_files if 'Genetic' in x]  # and 'ETHUSDT' in x]
+config = {
+    'slow_window': [3, 5, 6, 7, 12, 13, 26, 30, 40, 52],
+    'fast_window': [4, 5, 6, 7, 12, 24, 30, 40, 48],
+    'sign_window': [4, 6, 8, 9, 10, 12, 14, 16, 18, 20],
+    'fibo1': [2, 2.618, 3, 3.618, 4]
+}
 
-        for f in this_sys_related_csv_files:
-            df_csv = pd.read_csv(f)
-            macd_list = [ast.literal_eval(x) for x in df_csv['members'].tolist()]
-            file_name_list = f.split('-')
-            symbol = [file_name_list[4]][0]
-            start_date = '1 Mar 2018'
-            end_date = '2021-12-24 14:00:00'
-            data_step = [file_name_list[-1].split('.')[0]][0]
-            leverage = 1
-            trader_required_variables = [symbol, start_date, end_date, data_step, leverage]
-            DataHunter(symbol=symbol, start_date=start_date, end_date=end_date,
-                       step=data_step).download_data()
-            DataHunter(symbol=symbol, start_date=start_date, end_date=end_date,
-                       step='15m').download_data()
-            # for macd_value in macd_list:
-            #     trader(*macd_value)
-            for i in macd_list:
-                i.extend(trader_required_variables)
-            with concurrent.futures.ProcessPoolExecutor(max_workers=14) as executor:
-                for macd_value, trader_output in zip(macd_list, executor.map(trader, macd_list)):
-                    Profit_Loss_Table_by_Year_Month_for_symbol, money = trader_output
-                    Profit_Loss_Table_by_Year_Month_for_symbol.to_csv(f'{macd_value[3]}'
-                                                                      f'-{macd_value[4]}'
-                                                                      f'-{macd_value[-2]}'
-                                                                      f'-{macd_value[:3]}'
-                                                                      f'-{money}.csv',
-                                                                      index=True)
-                    print(macd_value, trader_output)
+coins_datastep_list = [
+    # ('LTCUSDT','1h'),
+    # ('BTCUSDT','1h'),
+    # ('IOTAUSDT','1h'),
+    # ('ETHUSDT','1h'),
+    # ('TRXUSDT', '1h'),
+    # ('NEOUSDT', '1h'),
+    # ('ETHUSDT', '30m'),
+    ('NEOUSDT', '30m'),
+    # ('IOTAUSDT', '30m'),
+    # ('TRXUSDT', '30m'),
+    # ('LTCUSDT', '30m'),
+    # ('BTCUSDT', '30m'),
 
+    # ('LTCUSDT', '15m'),
+    # ('BTCUSDT', '15m'),
+    # ('IOTAUSDT', '15m'),
+    # ('ETHUSDT', '15m'),
+    # ('TRXUSDT', '15m'),
+    # ('NEOUSDT', '15m'),
+]
+# region Data
+start_date = '1 Apr 2020'
+end_date = '2021-04-30 00:00'
+leverage = 1
+plot_width = 1500
+plot_height = 1000
+
+# for symbol, data_step in coins_datastep_list:
+#     dh = DataHunter(symbol, start_date, end_date, data_step)
+#     dh.download_data()
 
 if __name__ == '__main__':
     main()
