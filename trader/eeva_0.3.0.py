@@ -65,16 +65,6 @@ def xab_enter_check(df, date_pointer, xab, enter, enter_price, fibo_enter, C_at_
                 enter = 1
                 enter_price = xab[0][2]
                 XAB_virtual_list.append(xab)
-        if enter:
-            xab[3] = xab[0][3]  # C is placed in sl
-            xab[4] = df['low'][date_pointer]  # C is placed in sudo_sl
-            if df['MACD1_Hist'][date_pointer] < 0:
-                i = 0
-                while df['MACD1_Hist'][date_pointer - i] < 0:
-                    if df['low'][date_pointer - i] < xab[4] and df['low'][date_pointer - i] >= xab[
-                        0][3]:
-                        xab[4] = df['low'][date_pointer - i]
-                    i += 1
     if not xab[2] and df['low'][date_pointer] <= xab[0][2]:
         if not C_at_this_candle:
             enter = 1
@@ -87,17 +77,6 @@ def xab_enter_check(df, date_pointer, xab, enter, enter_price, fibo_enter, C_at_
                 enter = 1
                 enter_price = xab[0][2]
                 XAB_virtual_list.append(xab)
-        if enter:
-            xab[3] = xab[0][3]  # C is placed in sl
-            xab[4] = df['high'][date_pointer]  # C is placed in sudo_sl
-            if df['MACD1_Hist'][date_pointer] > 0:
-                i = 0
-                while df['MACD1_Hist'][date_pointer - i] > 0:
-                    if df['high'][date_pointer - i] > xab[4] and df['high'][date_pointer - i] <= \
-                            xab[
-                                0][3]:
-                        xab[4] = df['high'][date_pointer - i]
-                    i += 1
     return enter, enter_price, XAB_virtual_list
 
 
@@ -180,6 +159,7 @@ def trader(args):
     end_date = args[5]
     data_step = args[6]
     leverage = args[7]
+    fibo1 = 5
     # print(args, symbol, data_step)
     f = open("aaa.txt", "a")
     f.write(f'\nStart: {args}')
@@ -313,26 +293,16 @@ def trader(args):
                                                                                XAB_del_list,
                                                                                XAB_check_list)
                     if xab == xab_buy:
-                        sl_at_this_candle = 0
                         if date_pointer > len(df) - 1:
-                            exit_at_this_candel = 1
                             continue
-                        if macd_phase_change(df, date_pointer):
-                            if xab[3] != xab[4]:
-                                xab[3] = xab[4]
-                                sl_at_this_candle = 1
-                        # This is because when the phase is changed, first you need to
-                        # replace the sl with sudo_sl
                         if xab[2] == 1:
-                            if df['low'][date_pointer] < xab[3]:
+                            if df['low'][date_pointer] <= xab[0][3] or (df['high'][date_pointer] >=\
+                                    xab[0][3] + fibo1 * (abs(xab[0][2] - xab[0][3]))):
                                 enter = 0
                                 xab_buy = None
                                 index_sell = date_pointer
-                                if sl_at_this_candle == 0:
-                                    exit_price = xab[3]
-                                else:
-                                    exit_price = df['close'][date_pointer]
-                                sl_at_this_candle = 0  # very important
+                                exit_price = xab[0][3] if df['low'][date_pointer] <= xab[0][3] \
+                                    else (xab[0][3] + fibo1 * (abs(xab[0][2] - xab[0][3])))
                                 if print_outputs:
                                     print_trade(df, df2, xab[0][0], xab[0][1], xab[0][2], xab,
                                                 enter_price,
@@ -355,27 +325,20 @@ def trader(args):
                                     if print_outputs:
                                         print('loss:', loss)
                                         print('money:', money)
-                                # plot_figure(df, xabc[1][0], xabc[1][1], xabc[1][2], xabc[1][3], index_buy, index_sell,
-                                #             xabc[0][0], xabc[0][1], xabc[0][2], xabc[0][3], plot_width, plot_height)
                                 date_of_trade_list.append(df['timestamp'][date_pointer])
                                 num_of_neg_trades_list.append(num_of_neg_trades)
                                 num_of_pos_trades_list.append(num_of_pos_trades)
                                 money_after_each_trade_list.append(money)
                                 XAB_del_list.append(xab)
 
-                            else:
-                                stop_loss_trail(df, date_pointer, xab)
-
                         if xab[2] == 0:
-                            if df['high'][date_pointer] > xab[3]:
+                            if df['high'][date_pointer] >= xab[0][3] or df['low'][date_pointer] <= \
+                                    xab[0][3] - fibo1 * abs(xab[0][2] - xab[0][3]):
                                 enter = 0
                                 xab_buy = None
                                 index_sell = date_pointer
-                                if sl_at_this_candle == 0:
-                                    exit_price = xab[3]
-                                else:
-                                    exit_price = df['close'][date_pointer]
-                                sl_at_this_candle = 0  # very important
+                                exit_price = xab[0][3] if df['high'][date_pointer] >= xab[0][3] \
+                                    else (xab[0][3] - fibo1 * abs(xab[0][2] - xab[0][3]))
                                 if print_outputs:
                                     print_trade(df, df2, xab[0][0], xab[0][1], xab[0][2], xab,
                                                 enter_price, \
@@ -403,8 +366,6 @@ def trader(args):
                                 num_of_pos_trades_list.append(num_of_pos_trades)
                                 money_after_each_trade_list.append(money)
                                 XAB_del_list.append(xab)
-                            else:
-                                stop_loss_trail(df, date_pointer, xab)
     if print_outputs:
         print(XAB_virtual_list)
     print(money)
@@ -495,7 +456,7 @@ batch_size = 750
 
 
 def main():
-    run_mode = 1
+    run_mode = 0
     if run_mode == 1:
         """Data"""
         symbol = 'ETHUSDT'
