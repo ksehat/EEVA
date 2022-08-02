@@ -1,10 +1,7 @@
 # This system uses trailing stop loss with lower time step
 import pandas as pd
 import numpy as np
-import ast
-import os.path
-import concurrent.futures
-from my_geneticalgorithm_multiprocess import MyGeneticAlgorithm as mga
+from Optimization.my_geneticalgorithm_multiprocess import MyGeneticAlgorithm as mga
 from data_prep.data_hunter import DataHunter
 
 
@@ -524,12 +521,12 @@ coins_datastep_list = [
     # ('ETHUSDT','1h'),
     # ('TRXUSDT', '1h'),
     # ('NEOUSDT', '1h'),
-    # ('ETHUSDT', '30m'),
-    ('NEOUSDT', '30m'),
-    # ('IOTAUSDT', '30m'),
-    # ('TRXUSDT', '30m'),
-    # ('LTCUSDT', '30m'),
-    # ('BTCUSDT', '30m'),
+    ('ETHUSDT', '30m'),
+    # ('NEOUSDT', '30m'),
+    ('IOTAUSDT', '30m'),
+    ('TRXUSDT', '30m'),
+    ('LTCUSDT', '30m'),
+    ('BTCUSDT', '30m'),
 
     # ('LTCUSDT', '15m'),
     # ('BTCUSDT', '15m'),

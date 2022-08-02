@@ -550,15 +550,15 @@ run_mode=1
 file_includes = 'v2.2.1'
 if run_mode==1:
     """Data"""
-    binance_symbols = ['IOTAUSDT']
-    start_date = '1 Oct 2021'
-    end_date = '2021-11-01 10:00:00'
-    data_steps = ['30m']
+    binance_symbols = ['ETHUSDT']
+    start_date = '1 Mar 2022'
+    end_date = '2023-11-01 10:00:00'
+    data_steps = ['1h']
     leverage = 1
     plot_width = 1500
     plot_height = 1000
     macd_list = [
-        [5, 48, 6]
+        [12, 26, 9]
     ]
     for macd_value in macd_list:
         trader(*macd_value)

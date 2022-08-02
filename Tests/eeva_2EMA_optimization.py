@@ -3,17 +3,11 @@ import pandas as pd
 import numpy as np
 import math
 import os.path
-import time
-import ta
 from binance.client import Client
-from datetime import timedelta, datetime
+from datetime import datetime
 from dateutil import parser
 from ta.trend import MACD, EMAIndicator, IchimokuIndicator
-from ta.momentum import RSIIndicator as RSI
-import copy
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-from my_geneticalgorithm import MyGeneticAlgorithm as mga
+from Optimization.my_geneticalgorithm import MyGeneticAlgorithm as mga
 
 def MACD_IND(data, win_slow, win_fast, win_sign):
     MACD_IND1 = MACD(data['close'], window_slow=win_slow, window_fast=win_fast, window_sign=win_sign)

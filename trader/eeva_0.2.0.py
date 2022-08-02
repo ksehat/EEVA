@@ -67,8 +67,9 @@ def xab_enter_check(df, date_pointer, xab, enter, enter_price, fibo_enter, C_at_
                 XAB_virtual_list.append(xab)
         if enter:
             xab[3] = xab[0][3]  # C is placed in sl
-            xab[4] = df['low'][date_pointer]  # C is placed in sudo_sl
+            xab[4] = xab[0][3]  # C is placed in sudo_sl
             if df['MACD1_Hist'][date_pointer] < 0:
+                xab[4] = df['low'][date_pointer]  # C is placed in sudo_sl
                 i = 0
                 while df['MACD1_Hist'][date_pointer - i] < 0:
                     if df['low'][date_pointer - i] < xab[4] and df['low'][date_pointer - i] >= xab[
@@ -89,8 +90,9 @@ def xab_enter_check(df, date_pointer, xab, enter, enter_price, fibo_enter, C_at_
                 XAB_virtual_list.append(xab)
         if enter:
             xab[3] = xab[0][3]  # C is placed in sl
-            xab[4] = df['high'][date_pointer]  # C is placed in sudo_sl
+            xab[4] = xab[0][3]  # C is placed in sl
             if df['MACD1_Hist'][date_pointer] > 0:
+                xab[4] = df['high'][date_pointer]  # C is placed in sudo_sl
                 i = 0
                 while df['MACD1_Hist'][date_pointer - i] > 0:
                     if df['high'][date_pointer - i] > xab[4] and df['high'][date_pointer - i] <= \

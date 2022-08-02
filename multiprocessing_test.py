@@ -1,5 +1,3 @@
-from my_geneticalgorithm import MyGeneticAlgorithm as mga
-import concurrent.futures
 import math
 import multiprocessing
 

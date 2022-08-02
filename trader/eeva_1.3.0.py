@@ -51,47 +51,66 @@ def xab_initializer(xab):
     return X, A, B, index_X, index_A, index_B, index_4, flag
 
 
-def xab_enter_check(df, date_pointer, xab, enter):
-    if xab[2] and df['close'][date_pointer] >= xab[0][2]:
-        enter = 1
-        xab[3] = xab[0][3]  # C is placed in sl
-        xab[4] = df['low'][date_pointer]  # C is placed in sudo_sl
-        if df['MACD1_Hist'][date_pointer] < 0:
-            i = 0
-            while df['MACD1_Hist'][date_pointer - i] < 0:
-                if df['low'][date_pointer - i] < xab[4] and df['low'][date_pointer - i] >= xab[
-                    0][3]:
-                    xab[4] = df['low'][date_pointer - i]
-                i += 1
-    if not xab[2] and df['close'][date_pointer] <= xab[0][2]:
-        enter = 1
-        xab[3] = xab[0][3]  # C is placed in sl
-        xab[4] = df['high'][date_pointer]  # C is placed in sudo_sl
-        if df['MACD1_Hist'][date_pointer] > 0:
-            i = 0
-            while df['MACD1_Hist'][date_pointer - i] > 0:
-                if df['high'][date_pointer - i] > xab[4] and df['high'][date_pointer - i] <= xab[
-                    0][3]:
-                    xab[4] = df['high'][date_pointer - i]
-                i += 1
-    return enter
+def xab_enter_check(df, date_pointer, xab, enter, enter_price, XAB_del_list, C_at_this_candle,
+                    XAB_virtual_list):
+    if xab[2] and df['high'][date_pointer] >= xab[0][2]:
+        if not C_at_this_candle:
+            if df['low'][date_pointer] > xab[0][3]:
+                enter = 1
+                enter_price = xab[0][2]
+            else:
+                XAB_del_list.append(xab)
+                return enter, enter_price
+        if C_at_this_candle:
+            if df['close'][date_pointer] <= xab[0][2]:
+                enter = 1
+                enter_price = df['close'][date_pointer]
+            if df['close'][date_pointer] > xab[0][2]:
+                enter = 1
+                enter_price = xab[0][2]
+                XAB_virtual_list.append(xab)
+        if enter:
+            xab[3] = xab[0][3]  # C is placed in sl
+            xab[4] = df['low'][date_pointer]  # C is placed in sudo_sl
+            if df['MACD1_Hist'][date_pointer] < 0:
+                i = 0
+                while df['MACD1_Hist'][date_pointer - i] < 0:
+                    if df['low'][date_pointer - i] < xab[4] and df['low'][date_pointer - i] >= xab[
+                        0][3]:
+                        xab[4] = df['low'][date_pointer - i]
+                    i += 1
+    if not xab[2] and df['low'][date_pointer] <= xab[0][2]:
+        if not C_at_this_candle:
+            if df['high'][date_pointer] < xab[0][3]:
+                enter = 1
+                enter_price = xab[0][2]
+            else:
+                XAB_del_list.append(xab)
+                return enter, enter_price
+        if C_at_this_candle:
+            if df['close'][date_pointer] >= xab[0][2]:
+                enter = 1
+                enter_price = df['close'][date_pointer]
+            if df['close'][date_pointer] < xab[0][2]:
+                enter = 1
+                enter_price = xab[0][2]
+                XAB_virtual_list.append(xab)
+        if enter:
+            xab[3] = xab[0][3]  # C is placed in sl
+            xab[4] = df['high'][date_pointer]  # C is placed in sudo_sl
+            if df['MACD1_Hist'][date_pointer] > 0:
+                i = 0
+                while df['MACD1_Hist'][date_pointer - i] > 0:
+                    if df['high'][date_pointer - i] > xab[4] and df['high'][date_pointer - i] <= \
+                            xab[
+                                0][3]:
+                        xab[4] = df['high'][date_pointer - i]
+                    i += 1
+    return enter, enter_price, XAB_virtual_list
 
 
 def xab_completor(df, date_pointer, xab, XAB_del_list):
-    # region Initialize XABC and flag from xabc
-    X = xab[0][0]
-    A = xab[0][1]
-    B = xab[0][2]
-    # C = xab[0][3]
-    index_X = xab[1][0]
-    index_A = xab[1][1]
-    index_B = xab[1][2]
-    # index_C = xab[1][3]
-    index_4 = xab[1][4]
-    flag = xab[2]
-    dont_find_C = xab[5]
-    # endregion
-
+    C_at_this_candle = 0
     if xab[2] == 1:  # long
         if xab[0][3]:
             if df['MACD1_Hist'][date_pointer] < 0 and xab[5] == 0:  # dont_find_C = xab[0][5]
@@ -103,7 +122,9 @@ def xab_completor(df, date_pointer, xab, XAB_del_list):
                 xab[3] = xab[0][3]
                 xab[4] = xab[0][3]
         if not xab[0][3] and not xab[5]:
-            if df['low'][date_pointer] <= A and df['MACD1_Hist'][date_pointer] < 0 and xab[5] == 0:
+            if df['low'][date_pointer] <= xab[0][1] and df['MACD1_Hist'][date_pointer] < 0 and xab[
+                5] == 0:
+                C_at_this_candle = 1
                 xab[0][3] = df['low'][date_pointer]
                 xab[1][3] = date_pointer
                 xab[3] = xab[0][3]
@@ -123,7 +144,9 @@ def xab_completor(df, date_pointer, xab, XAB_del_list):
                 xab[3] = xab[0][3]
                 xab[4] = xab[0][3]
         if not xab[0][3] and not xab[5]:
-            if df['high'][date_pointer] >= A and df['MACD1_Hist'][date_pointer] > 0 and xab[5] == 0:
+            if df['high'][date_pointer] >= xab[0][1] and df['MACD1_Hist'][date_pointer] > 0 and xab[
+                5] == 0:
+                C_at_this_candle = 1
                 xab[0][3] = df['high'][date_pointer]
                 xab[1][3] = date_pointer
                 xab[3] = xab[0][3]
@@ -132,7 +155,7 @@ def xab_completor(df, date_pointer, xab, XAB_del_list):
                 xab[5] = 1
                 XAB_del_list.append(xab)
 
-    return xab, XAB_del_list
+    return xab, XAB_del_list, C_at_this_candle
 
 
 def xab_reject_decision(df, dp, xab, XAB_del_list, XAB_check_list):
@@ -265,26 +288,35 @@ def trader(args):
         return None
     XAB_del_list = []  # This the list of XABs that are rejected
     XAB_check_list = []  # This is the list of XABs that may be entered and are valid to enter but right now the system is in trade
+    XAB_virtual_list = []
     date_pointer2 = 0
     exit_at_this_candel = 0
+    fibo_enter = 1.618
+    enter_price = 0
+
     for date_pointer in range(XAB_list[0][1][4], len(df)):
         exit_at_this_candel = 0
         date_pointer22 = equal_date_pointer(df, df2, date_pointer, date_pointer2, data_step)
-        XAB_valid_list = [x for x in XAB_list if date_pointer >= x[1][
-            4]]  # This is the list of XABs before the date_pointer
-        for idx_xab, xab in enumerate(XAB_valid_list[
-                                      ::-1]):  # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xab_flag, sl, sudo_sl, dont_find_C]
+        # This is the list of XABs before the date_pointer
+        XAB_valid_list = [x for x in XAB_list if date_pointer >= x[1][4]]
+        # xabc = [[X, A, B, C], [index_X, index_A, index_B, index_4, index_C], xab_flag, sl, sudo_sl, dont_find_C]
+        for idx_xab, xab in enumerate(XAB_valid_list[::-1]):
             if xab not in XAB_del_list:
                 X, A, B, index_X, index_A, index_B, index_4, flag = xab_initializer(xab)
                 if enter == 0:
                     if xab[5] == 0:
-                        xab, XAB_del_list = xab_completor(df, date_pointer, xab, XAB_del_list)
+                        xab, XAB_del_list, C_at_this_candle = xab_completor(df, date_pointer, xab,
+                                                                            XAB_del_list)
                     if xab[0][3] and not exit_at_this_candel:
-                        enter = xab_enter_check(df, date_pointer, xab, enter)
+                        enter, enter_price, XAB_virtual_list = xab_enter_check(df, date_pointer,
+                                                                               xab, enter,
+                                                                               enter_price,
+                                                                               XAB_del_list,
+                                                                               C_at_this_candle,
+                                                                               XAB_virtual_list)
                     if enter == 1:
                         index_buy = date_pointer
                         xab_buy = xab
-                        enter_price = xab[0][2]
                         money_before_each_trade_list.append(money)
                     if enter == 0 and xab[0][3] and xab[5]:
                         XAB_del_list, XAB_check_list = xab_reject_decision(df, date_pointer,
@@ -295,7 +327,8 @@ def trader(args):
                 if enter == 1:  # If it is in trade
                     if xab != xab_buy:
                         if xab[5] == 0:
-                            xab, XAB_del_list = xab_completor(df, date_pointer, xab, XAB_del_list)
+                            xab, XAB_del_list, C_at_this_candle = xab_completor(df, date_pointer,
+                                                                                xab, XAB_del_list)
                         if xab[0][3] and xab[5]:
                             XAB_del_list, XAB_check_list = xab_reject_decision(df,
                                                                                date_pointer,
@@ -333,7 +366,7 @@ def trader(args):
                                     if exit_price > enter_price:
                                         profit = leverage * (
                                                 (
-                                                            exit_price - enter_price) / enter_price) - trade_fee
+                                                        exit_price - enter_price) / enter_price) - trade_fee
                                         money = money + profit * money
                                         profit_loss_list.append(profit)
                                         num_of_pos_trades += 1
@@ -342,7 +375,7 @@ def trader(args):
                                             print('money:', money)
                                     if exit_price <= enter_price:
                                         loss = leverage * ((
-                                                                       exit_price - enter_price) / enter_price) - trade_fee
+                                                                   exit_price - enter_price) / enter_price) - trade_fee
                                         money = money + loss * money
                                         profit_loss_list.append(loss)
                                         num_of_neg_trades += 1
@@ -407,6 +440,8 @@ def trader(args):
                                     XAB_del_list.append(xab)
                                 else:
                                     stop_loss_trail(df2, date_pointer2, xab)
+    if print_outputs:
+        print(XAB_virtual_list)
     print(money)
 
     # region
@@ -499,7 +534,7 @@ def main():
     if run_mode == 1:
         """Data"""
         symbol = 'ETHUSDT'
-        start_date = '1 Mar 2018'
+        start_date = '1 Mar 2021'
         end_date = '2021-12-01 00:00:00'
         data_step = '30m'
         leverage = 1

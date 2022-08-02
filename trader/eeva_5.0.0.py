@@ -32,7 +32,7 @@ def print_trade(df, df2, X, A, B, xab, enter_price, exit_price, index_X, index_A
     print(df['timestamp'][index_A], 'A:', A)
     print(df['timestamp'][index_B], 'B:', B)
     print(df['timestamp'][xab[1][3]], 'C:', xab[0][3])
-    print(df['timestamp'][index_buy], 'enter:', enter_price)
+    print(df2['timestamp'][index_buy], 'enter:', enter_price)
     print(df2['timestamp'][index_sell], 'exit:', exit_price)
 
 
@@ -55,21 +55,23 @@ def xab_enter_check(df, date_pointer, xab, enter):
     if xab[2] and df['close'][date_pointer] >= xab[0][2]:
         enter = 1
         xab[3] = xab[0][3]  # C is placed in sl
-        xab[4] = xab[0][3]  # C is placed in sudo_sl
+        xab[4] = df['low'][date_pointer]  # C is placed in sudo_sl
         if df['MACD1_Hist'][date_pointer] < 0:
             i = 0
             while df['MACD1_Hist'][date_pointer - i] < 0:
-                if df['low'][date_pointer - i] < xab[4]:
+                if df['low'][date_pointer - i] < xab[4] and df['low'][date_pointer - i] >= xab[
+                    0][3]:
                     xab[4] = df['low'][date_pointer - i]
                 i += 1
     if not xab[2] and df['close'][date_pointer] <= xab[0][2]:
         enter = 1
         xab[3] = xab[0][3]  # C is placed in sl
-        xab[4] = xab[0][3]  # C is placed in sudo_sl
+        xab[4] = df['high'][date_pointer]  # C is placed in sudo_sl
         if df['MACD1_Hist'][date_pointer] > 0:
             i = 0
             while df['MACD1_Hist'][date_pointer - i] > 0:
-                if df['high'][date_pointer - i] > xab[4]:
+                if df['high'][date_pointer - i] > xab[4] and df['high'][date_pointer - i] <= xab[
+                    0][3]:
                     xab[4] = df['high'][date_pointer - i]
                 i += 1
     return enter

@@ -1,20 +1,14 @@
 import pandas as pd
 import math
 import os.path
-import time
-import ta
 from binance.client import Client
-from datetime import timedelta, datetime
+from datetime import datetime
 from dateutil import parser
 import numpy as np
-from ta.trend import MACD, EMAIndicator, IchimokuIndicator
-from ta.momentum import RSIIndicator as RSI
-import copy
+from ta.trend import MACD, IchimokuIndicator
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from data_prep.data_hunter import DataHunter
-import pyflowchart as pfc
-from my_geneticalgorithm import MyGeneticAlgorithm as mga
+from Optimization.my_geneticalgorithm import MyGeneticAlgorithm as mga
 from data_prep.data_hunter import DataHunter
 import os
 

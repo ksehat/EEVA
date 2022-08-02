@@ -1,6 +1,1 @@
-binance~=0.3
-pandas~=1.2.2
-ta~=0.7.0
-numpy~=1.20.1
-python-dateutil~=2.8.1
-plotly~=4.14.3
+gAAAAABiy9hJx_hudjx4lVJfVzrY8I91DAB3QkzwiJ1Xq9QNF6t_YEVEiQZ8xxZTRP1d8QjtRWezIBnmAgStKBmMj7F3x2IvpP9PmP5yYV05YLRy3dQhMCk0q_A03KRMwohXFH2AjDHIcJgoPQF1fIeijlQdB8Hmi-A7AaQK5O-rViaq_pjlrovZISTpMYDztUNn8CmWCgwZ
