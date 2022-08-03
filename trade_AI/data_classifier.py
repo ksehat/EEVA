@@ -31,7 +31,7 @@ def trader(args):
             if df['high'][j] >= tp:
                 df['class'][i] = 1
                 break
-    df.to_csv('df.csv', index=True)
+    df.to_csv(f'df_{data_step}.csv', index=True)
 
 
 
@@ -40,7 +40,7 @@ def main():
     symbol = 'ETHUSDT'
     start_date = '1 Jan 2020'
     end_date = '2022-08-01 00:00:00'
-    data_step = '1h'
+    data_step = '1m'
     leverage = 1
     input_list = [
         [symbol, start_date, end_date, data_step, leverage, 26, 12, 9, 20, 2, 9, 26, 52, 26]
