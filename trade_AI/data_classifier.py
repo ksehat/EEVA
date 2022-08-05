@@ -20,18 +20,34 @@ def trader(args):
     rr = 3
     sl_percent = 0.005
     tp_percent = rr * sl_percent
-    df['class'] = np.nan
+    df['close_long_index'] = np.nan
+    df['class_long'] = np.nan
+    df['class_short'] = np.nan
     for i in range(len(df)):
         tp = df['close'][i] * (1+tp_percent)
         sl = df['close'][i] * (1-sl_percent)
         for j in range(i+1, len(df)-1):
             if df['low'][j] < sl:
-                df['class'][i] = 0
+                df['close_long_index'][i] = j
+                df['class_long'][i] = 0
                 break
             if df['high'][j] >= tp:
-                df['class'][i] = 1
+                df['close_long_index'][i] = j
+                df['class_long'][i] = 1
                 break
-    df.to_csv(f'df_{data_step}.csv', index=True)
+    for i in range(len(df)):
+        tp = df['close'][i] * (1-tp_percent)
+        sl = df['close'][i] * (1+sl_percent)
+        for j in range(i+1, len(df)-1):
+            if df['high'][j] > sl:
+                df['close_short_index'][i] = j
+                df['class_short'][i] = 0
+                break
+            if df['low'][j] <= tp:
+                df['close_short_index'][i] = j
+                df['class_short'][i] = 1
+                break
+    df.to_csv(f'df_{data_step}.csv')
 
 
 
@@ -40,7 +56,7 @@ def main():
     symbol = 'ETHUSDT'
     start_date = '1 Jan 2020'
     end_date = '2022-08-01 00:00:00'
-    data_step = '1m'
+    data_step = '15m'
     leverage = 1
     input_list = [
         [symbol, start_date, end_date, data_step, leverage, 26, 12, 9, 20, 2, 9, 26, 52, 26]
