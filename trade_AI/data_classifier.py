@@ -21,6 +21,7 @@ def trader(args):
     sl_percent = 0.005
     tp_percent = rr * sl_percent
     df['close_long_index'] = np.nan
+    df['close_short_index'] = np.nan
     df['class_long'] = np.nan
     df['class_short'] = np.nan
     for i in range(len(df)):
