@@ -1,5 +1,6 @@
 import pandas as pd
 import math
+import pickle
 from sklearn.ensemble import RandomForestClassifier as rfc
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
@@ -27,3 +28,10 @@ win_rate = result_cm[1][1]/(result_cm[0][1] + result_cm[1][1])
 profit = math.pow((1+0.015-0.0012),result_cm[1][1])*math.pow((1-0.005-0.0012),result_cm[0][1])
 print('win rate is:',win_rate)
 print('profit is:',profit)
+
+# save the model to disk
+pickle.dump(model, open('model.sav', 'wb'))
+# load the model from disk
+# loaded_model = pickle.load(open('model.sav', 'rb'))
+# result = loaded_model.score(X_test, Y_test)
+# print(result)
